@@ -18,15 +18,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en\" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
         <Providers>
-          <div className="flex h-screen overflow-hidden">
-            <Sidebar />
-            <div className="flex-1 overflow-y-auto">
-              <Header />
-              <main className="p-6">{children}</main>
-            </div>
+          <Sidebar />
+          <div
+            className={`
+              flex flex-col min-h-screen transition-all duration-300
+              md:ml-64  // On desktop, push content right by the sidebar width
+            `}
+          >
+            <Header />
+            <main className="flex-1 overflow-y-auto p-6">{children}</main>
           </div>
         </Providers>
       </body>
