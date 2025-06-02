@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import Image from "next/image"; // <-- import Image
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
@@ -15,10 +16,10 @@ import {
   Clock,
   LogOut,
   Wine,
-  Menu, // Hamburger icon for mobile
-  X, // Close icon for mobile
-  ChevronsLeft, // Icon for collapsing on desktop
-  ChevronsRight, // Icon for expanding on desktop
+  Menu,
+  X,
+  ChevronsLeft,
+  ChevronsRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -74,13 +75,13 @@ const sidebarNavItems = [
 
 export function Sidebar() {
   const pathname = usePathname();
-  const [isMobileOpen, setIsMobileOpen] = useState(false); // State for mobile sidebar open/close
-  const [isCollapsed, setIsCollapsed] = useState(false); // State for desktop sidebar collapsed/expanded
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   return (
     <>
       {/* Mobile Hamburger menu button */}
-      <div className="md:hidden p-4">
+      <div className="md:hidden">
         <Button
           variant="ghost"
           size="icon"
@@ -95,7 +96,7 @@ export function Sidebar() {
         </Button>
       </div>
 
-      {/* Mobile Overlay when sidebar is open */}
+      {/* Mobile Overlay */}
       {isMobileOpen && (
         <div
           className="fixed inset-0 bg-black/50 z-40 md:hidden"
@@ -107,25 +108,31 @@ export function Sidebar() {
       <aside
         className={cn(
           "flex flex-col border-r bg-background fixed inset-y-0 left-0 z-50 transform transition-all duration-300 ease-in-out",
-          // Width adjustments
-          "w-1/2 md:w-64", // Mobile: half screen; desktop: default 64
-          isCollapsed && "md:w-20", // Collapsed width on desktop
-
-          // Visibility toggle
-          "md:translate-x-0", // Show on md and up
+          "w-1/2 md:w-64",
+          isCollapsed && "md:w-20",
+          "md:translate-x-0",
           isMobileOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
         {/* Header Section */}
         <div className="relative p-6 flex items-center justify-between">
-          <h1
-            className={cn(
-              "text-xl font-bold transition-opacity duration-300",
-              isCollapsed && "opacity-0 pointer-events-none"
-            )}
-          >
-            Bliss Lounge
-          </h1>
+          <div className="flex items-center gap-2">
+            <Image
+              src="/blissLounge.png"
+              alt="Bliss Lounge Logo"
+              width={40}
+              height={40}
+              className="rounded-full object-cover"
+            />
+            <h1
+              className={cn(
+                "text-xl font-bold transition-opacity duration-300",
+                isCollapsed && "opacity-0 pointer-events-none"
+              )}
+            >
+              Bliss Lounge
+            </h1>
+          </div>
           {/* Collapse/Expand button for desktop */}
           <Button
             variant="ghost"
