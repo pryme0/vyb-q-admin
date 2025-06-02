@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 const formSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -33,11 +34,14 @@ export default function SignInPage() {
     },
   });
 
+  const router = useRouter();
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     try {
       // Handle sign in logic here
       toast.success("Successfully signed in!");
+      router.push('/overview')
     } catch (error) {
       toast.error("Failed to sign in. Please try again.");
     } finally {

@@ -1,7 +1,14 @@
 "use client";
 
 import { CartItem, MenuItem } from "@/types";
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+  useRef,
+} from "react";
 import { toast } from "sonner";
 
 interface CartContextType {
@@ -18,8 +25,9 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
-  
-  // Load cart from localStorage on component mount
+  const hasMountedRef = useRef(false);
+
+  // Load cart from localStorage on mount
   useEffect(() => {
     const savedCart = localStorage.getItem("cart");
     if (savedCart) {
@@ -29,43 +37,52 @@ export function CartProvider({ children }: { children: ReactNode }) {
         console.error("Failed to parse cart from localStorage:", error);
       }
     }
+    hasMountedRef.current = true;
   }, []);
 
-  // Save cart to localStorage whenever it changes
+  // Persist cart to localStorage on change
   useEffect(() => {
     localStorage.setItem("cart", JSON.stringify(items));
   }, [items]);
 
   const addToCart = (menuItem: MenuItem, quantity = 1) => {
-    setItems(currentItems => {
+    setItems((currentItems) => {
       const existingItemIndex = currentItems.findIndex(
-        item => item.menuItem.id === menuItem.id
+        (item) => item.menuItem.id === menuItem.id
       );
 
+      const updatedItems = [...currentItems];
+
       if (existingItemIndex > -1) {
-        // Item exists, update quantity
-        const updatedItems = [...currentItems];
         updatedItems[existingItemIndex] = {
           ...updatedItems[existingItemIndex],
-          quantity: updatedItems[existingItemIndex].quantity + quantity
+          quantity: updatedItems[existingItemIndex].quantity + quantity,
         };
-        toast.success(`${menuItem.name} quantity updated in cart`);
-        return updatedItems;
+        if (hasMountedRef.current) {
+          toast.success(`${menuItem.name} quantity updated in cart`, {
+            duration: 2000,
+          });
+        }
       } else {
-        // Item doesn't exist, add new item
-        toast.success(`${menuItem.name} added to cart`);
-        return [...currentItems, { menuItem, quantity }];
+        updatedItems.push({ menuItem, quantity });
+        if (hasMountedRef.current) {
+          toast.success(`${menuItem.name} added to cart`, { duration: 2000 });
+        }
       }
+
+      return updatedItems;
     });
   };
 
   const removeFromCart = (itemId: string) => {
-    setItems(currentItems => {
-      const itemToRemove = currentItems.find(item => item.menuItem.id === itemId);
-      if (itemToRemove) {
+    setItems((currentItems) => {
+      const itemToRemove = currentItems.find(
+        (item) => item.menuItem.id === itemId
+      );
+      if (itemToRemove && hasMountedRef.current) {
         toast.info(`${itemToRemove.menuItem.name} removed from cart`);
       }
-      return currentItems.filter(item => item.menuItem.id !== itemId);
+      return currentItems.filter((item) => item.menuItem.id !== itemId);
     });
   };
 
@@ -75,8 +92,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    setItems(currentItems => 
-      currentItems.map(item => 
+    setItems((currentItems) =>
+      currentItems.map((item) =>
         item.menuItem.id === itemId ? { ...item, quantity } : item
       )
     );
@@ -84,28 +101,28 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const clearCart = () => {
     setItems([]);
-    toast.info("Cart cleared");
+    if (hasMountedRef.current) {
+      toast.info("Cart cleared");
+    }
   };
 
-  // Calculate total number of items in cart
   const itemCount = items.reduce((total, item) => total + item.quantity, 0);
 
-  // Calculate subtotal
   const subtotal = items.reduce(
     (total, item) => total + item.menuItem.price * item.quantity,
     0
   );
 
   return (
-    <CartContext.Provider 
-      value={{ 
-        items, 
-        addToCart, 
-        removeFromCart, 
-        updateQuantity, 
-        clearCart, 
-        itemCount, 
-        subtotal 
+    <CartContext.Provider
+      value={{
+        items,
+        addToCart,
+        removeFromCart,
+        updateQuantity,
+        clearCart,
+        itemCount,
+        subtotal,
       }}
     >
       {children}
