@@ -1,115 +1,115 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Overview } from "@/components/dashboard/overview";
-import { RecentOrders } from "@/components/dashboard/recent-orders";
-import { TopSellingItems } from "@/components/dashboard/top-selling-items";
-import { DollarSign, Users, ShoppingBag, TrendingUp } from "lucide-react";
+"use client";
 
-export default function DashboardPage() {
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { useRouter } from "next/navigation";
+import { useSignIn } from "@/hooks";
+
+const formSchema = z.object({
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+});
+
+export default function SignInPage() {
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
+
+  const router = useRouter();
+  const signInMutation = useSignIn();
+
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    try {
+      await signInMutation.mutateAsync({
+        email: values.email,
+        password: values.password,
+      });
+      router.push("/dashboard/overview");
+    } catch (error) {
+      console.log({ error });
+      // Already handled by React Query onError
+    }
+  };
+
   return (
-    <div className="space-y-6 p-4 sm:p-6 md:p-8">
-      <h1 className="text-2xl sm:text-3xl font-bold">Dashboard Overview</h1>
+    <div className="container mx-auto px-4 py-16">
+      <div className="max-w-md mx-auto">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold mb-2">Welcome Back</h1>
+          <p className="text-muted-foreground">
+            Sign in to your account to continue
+          </p>
+        </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-4 sm:p-6">
-            <div className="flex items-center gap-4">
-              <div className="p-2 bg-primary/10 rounded-full">
-                <DollarSign className="h-6 w-6 text-primary" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Total Revenue
-                </p>
-                <h3 className="text-xl sm:text-2xl font-bold">₦4,125,000</h3>
-                <p className="text-xs text-green-500">+15.2% from last month</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input placeholder="you@example.com" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-        <Card>
-          <CardContent className="p-4 sm:p-6">
-            <div className="flex items-center gap-4">
-              <div className="p-2 bg-primary/10 rounded-full">
-                <ShoppingBag className="h-6 w-6 text-primary" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Total Orders
-                </p>
-                <h3 className="text-xl sm:text-2xl font-bold">2,145</h3>
-                <p className="text-xs text-green-500">+10.5% from last month</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Password</FormLabel>
+                  <FormControl>
+                    <Input type="password" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-        <Card>
-          <CardContent className="p-4 sm:p-6">
-            <div className="flex items-center gap-4">
-              <div className="p-2 bg-primary/10 rounded-full">
-                <Users className="h-6 w-6 text-primary" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Total Customers
-                </p>
-                <h3 className="text-xl sm:text-2xl font-bold">1,234</h3>
-                <p className="text-xs text-green-500">+18.7% from last month</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={signInMutation.isPending}
+              loading={signInMutation.isPending}
+            >
+              Sign In
+            </Button>
+          </form>
+        </Form>
 
-        <Card>
-          <CardContent className="p-4 sm:p-6">
-            <div className="flex items-center gap-4">
-              <div className="p-2 bg-primary/10 rounded-full">
-                <TrendingUp className="h-6 w-6 text-primary" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Avg. Order Value
-                </p>
-                <h3 className="text-xl sm:text-2xl font-bold">₦15,750</h3>
-                <p className="text-xs text-green-500">+7.2% from last month</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="mt-6 text-center text-sm">
+          <p className="text-muted-foreground">
+            Don't have an account?{" "}
+            <Link
+              href="/auth/signup"
+              className="text-primary hover:underline font-medium"
+            >
+              Sign up
+            </Link>
+          </p>
+        </div>
       </div>
-
-      {/* Charts and Top Items */}
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-7">
-        <Card className="lg:col-span-4">
-          <CardHeader>
-            <CardTitle>Revenue Overview</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Overview />
-          </CardContent>
-        </Card>
-
-        <Card className="lg:col-span-3">
-          <CardHeader>
-            <CardTitle>Top Selling Items</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <TopSellingItems />
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Recent Orders */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Orders</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <RecentOrders />
-        </CardContent>
-      </Card>
     </div>
   );
 }

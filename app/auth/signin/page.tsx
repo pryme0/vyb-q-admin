@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -15,8 +14,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { useSignIn } from "@/hooks";
 
 const formSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -24,8 +23,6 @@ const formSchema = z.object({
 });
 
 export default function SignInPage() {
-  const [isLoading, setIsLoading] = useState(false);
-
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -35,19 +32,20 @@ export default function SignInPage() {
   });
 
   const router = useRouter();
+  const signInMutation = useSignIn();
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-    setIsLoading(true);
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      // Handle sign in logic here
-      toast.success("Successfully signed in!");
-      router.push('/overview')
+      await signInMutation.mutateAsync({
+        email: values.email,
+        password: values.password,
+      });
+      router.push("/dashboard/overview");
     } catch (error) {
-      toast.error("Failed to sign in. Please try again.");
-    } finally {
-      setIsLoading(false);
+      console.log({ error });
+      // Already handled by React Query onError
     }
-  }
+  };
 
   return (
     <div className="container mx-auto px-4 py-16">
@@ -89,8 +87,13 @@ export default function SignInPage() {
               )}
             />
 
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Signing in..." : "Sign In"}
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={signInMutation.isPending}
+              loading={signInMutation.isPending}
+            >
+              Sign In
             </Button>
           </form>
         </Form>

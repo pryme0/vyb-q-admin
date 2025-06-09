@@ -11,54 +11,65 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { InventoryUnitEnum } from "@/types";
 
 interface InventoryFormProps {
   initialData?: {
-    name: string;
+    itemName: string;
     quantity: number;
-    unit: string;
-    status: string;
+    unitPrice: number;
+    description?: string;
+    unit: InventoryUnitEnum;
   };
   onSubmit: (data: {
-    name: string;
+    itemName: string;
     quantity: number;
-    unit: string;
-    status: string;
+    unitPrice: number;
+    description?: string;
+    unit: InventoryUnitEnum;
   }) => void;
   onCancel: () => void;
+  loading?: boolean;
 }
 
 export function InventoryForm({
   initialData,
   onSubmit,
   onCancel,
+  loading,
 }: InventoryFormProps) {
-  const [name, setName] = useState(initialData?.name || "");
+  const [itemName, setItemName] = useState(initialData?.itemName || "");
   const [quantity, setQuantity] = useState(
-    initialData?.quantity.toString() || ""
+    initialData?.quantity?.toString() || ""
   );
-  const [unit, setUnit] = useState(initialData?.unit || "kg");
-  const [status, setStatus] = useState(initialData?.status || "In Stock");
+  const [unitPrice, setUnitPrice] = useState(
+    initialData?.unitPrice?.toString() || ""
+  );
+  const [description, setDescription] = useState(
+    initialData?.description || ""
+  );
+  const [unit, setUnit] = useState(initialData?.unit || InventoryUnitEnum.KG);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit({
-      name,
+      itemName,
       quantity: Number(quantity),
+      unitPrice: Number(unitPrice),
+      description: description || undefined,
       unit,
-      status,
     });
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="name">Name</Label>
+        <Label htmlFor="itemName">Item Name</Label>
         <Input
-          id="name"
-          placeholder="Inventory name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
+          id="itemName"
+          placeholder="Enter item name"
+          value={itemName}
+          onChange={(e) => setItemName(e.target.value)}
           required
         />
       </div>
@@ -68,7 +79,7 @@ export function InventoryForm({
         <Input
           id="quantity"
           type="number"
-          placeholder="Quantity"
+          placeholder="Enter quantity"
           value={quantity}
           onChange={(e) => setQuantity(e.target.value)}
           required
@@ -76,34 +87,52 @@ export function InventoryForm({
       </div>
 
       <div className="space-y-2">
+        <Label htmlFor="unitPrice">Unit Price</Label>
+        <Input
+          id="unitPrice"
+          type="number"
+          step="0.01"
+          placeholder="Enter unit price"
+          value={unitPrice}
+          onChange={(e) => setUnitPrice(e.target.value)}
+          required
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="description">Description</Label>
+        <Input
+          id="description"
+          placeholder="Enter description (optional)"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+        />
+      </div>
+
+      <div className="space-y-2">
         <Label htmlFor="unit">Unit</Label>
-        <Select value={unit} onValueChange={setUnit}>
+        <Select
+          value={unit}
+          onValueChange={(value) => setUnit(value as InventoryUnitEnum)}
+        >
           <SelectTrigger>
             <SelectValue placeholder="Select unit" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="kg">kg</SelectItem>
-            <SelectItem value="litres">litres</SelectItem>
-            <SelectItem value="pieces">pieces</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="status">Status</Label>
-        <Select value={status} onValueChange={setStatus}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="In Stock">In Stock</SelectItem>
-            <SelectItem value="Out of Stock">Out of Stock</SelectItem>
+            <SelectItem value={InventoryUnitEnum.KG}>KG</SelectItem>
+            <SelectItem value={InventoryUnitEnum.LITERS}>Liters</SelectItem>
+            <SelectItem value={InventoryUnitEnum.PIECES}>Pieces</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
       <div className="flex justify-end gap-2 pt-4">
-        <Button type="button" variant="ghost" onClick={onCancel}>
+        <Button
+          loading={loading}
+          type="button"
+          variant="ghost"
+          onClick={onCancel}
+        >
           Cancel
         </Button>
         <Button type="submit">Save</Button>

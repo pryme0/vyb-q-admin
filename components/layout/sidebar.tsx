@@ -1,10 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import Image from "next/image"; // <-- import Image
-import { cn } from "@/lib/utils";
+import Image from "next/image";
+import { useState } from "react";
 import {
   LayoutDashboard,
   ShoppingBag,
@@ -16,180 +15,129 @@ import {
   Clock,
   LogOut,
   Wine,
-  Menu,
-  X,
-  ChevronsLeft,
-  ChevronsRight,
+  ChevronLeft,
+  ChevronRight,
+  ShoppingCart,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 
 const sidebarNavItems = [
-  {
-    title: "Dashboard",
-    href: "/",
-    icon: LayoutDashboard,
-  },
-  {
-    title: "Orders",
-    href: "/orders",
-    icon: ShoppingBag,
-  },
-  {
-    title: "Customers",
-    href: "/customers",
-    icon: Users,
-  },
-  {
-    title: "Menu Items",
-    href: "/menu-items",
-    icon: ChefHat,
-  },
-  {
-    title: "Bar Items",
-    href: "/bar-items",
-    icon: Wine,
-  },
-  {
-    title: "Inventory",
-    href: "/inventory",
-    icon: Package,
-  },
-  {
-    title: "Reservations",
-    href: "/reservations",
-    icon: Clock,
-  },
-  {
-    title: "Reports",
-    href: "/reports",
-    icon: FileText,
-  },
-  {
-    title: "Settings",
-    href: "/settings",
-    icon: Settings,
-  },
+  { title: "Dashboard", href: "/dashboard/overview", icon: LayoutDashboard },
+  { title: "Orders", href: "/dashboard/orders", icon: ShoppingCart },
+  { title: "Customers", href: "/dashboard/customers", icon: Users },
+  { title: "Menu Items", href: "/dashboard/menu-items", icon: ChefHat },
+  { title: "Inventory", href: "/dashboard/inventory", icon: Package },
+  { title: "Reservations", href: "/dashboard/reservations", icon: Clock },
+  { title: "Reports", href: "/dashboard/reports", icon: FileText },
+  { title: "Settings", href: "/dashboard/settings", icon: Settings },
 ];
 
-export function Sidebar() {
+interface SidebarProps {
+  isMobileOpen: boolean;
+  toggleMobile: () => void;
+}
+
+export function Sidebar({ isMobileOpen, toggleMobile }: SidebarProps) {
   const pathname = usePathname();
-  const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+
+  const toggleSidebar = () => {
+    setIsCollapsed(!isCollapsed);
+  };
 
   return (
     <>
-      {/* Mobile Hamburger menu button */}
-      <div className="md:hidden">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setIsMobileOpen(!isMobileOpen)}
-          className="fixed top-4 left-4 z-50 bg-background/80 backdrop-blur-sm"
-        >
-          {isMobileOpen ? (
-            <X className="h-6 w-6" />
-          ) : (
-            <Menu className="h-6 w-6" />
-          )}
-        </Button>
-      </div>
-
       {/* Mobile Overlay */}
       {isMobileOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-40 md:hidden"
-          onClick={() => setIsMobileOpen(false)}
+          className="fixed inset-0 bg-black/50 z-[998] lg:hidden transition-opacity duration-300 ease-in-out"
+          onClick={toggleMobile}
         />
       )}
 
-      {/* Sidebar container */}
-      <aside
-        className={cn(
-          "flex flex-col border-r bg-background fixed inset-y-0 left-0 z-50 transform transition-all duration-300 ease-in-out",
-          "w-1/2 md:w-64",
-          isCollapsed && "md:w-20",
-          "md:translate-x-0",
-          isMobileOpen ? "translate-x-0" : "-translate-x-full"
-        )}
+      {/* Sidebar */}
+      <div
+        className={`
+          fixed top-0 left-0 h-screen bg-white border-r shadow-lg z-[999]
+          w-64 flex flex-col
+          transform transition-all duration-300 ease-in-out
+          ${isMobileOpen ? "translate-x-0" : "-translate-x-full"}
+          lg:translate-x-0 lg:sticky lg:shadow-none
+          ${isCollapsed ? "lg:w-20" : "lg:w-64"}
+        `}
       >
-        {/* Header Section */}
-        <div className="relative p-6 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Image
-              src="/blissLounge.png"
-              alt="Bliss Lounge Logo"
-              width={40}
-              height={40}
-              className="rounded-full object-cover"
-            />
-            <h1
-              className={cn(
-                "text-xl font-bold transition-opacity duration-300",
-                isCollapsed && "opacity-0 pointer-events-none"
-              )}
-            >
+        {/* Collapse Button (Desktop only) */}
+        <button
+          onClick={toggleSidebar}
+          className="hidden lg:block absolute -right-3 top-6 bg-white border border-gray-200 rounded-full p-1 shadow-sm hover:shadow-md z-10 transition-shadow"
+        >
+          {isCollapsed ? (
+            <ChevronRight className="h-4 w-4" />
+          ) : (
+            <ChevronLeft className="h-4 w-4" />
+          )}
+        </button>
+
+        {/* Logo */}
+        <div className="p-6 flex items-center gap-2 border-b lg:border-b-0">
+          <Image
+            src="/blissLounge.png"
+            alt="Bliss Lounge Logo"
+            width={40}
+            height={40}
+            className="rounded-full object-cover flex-shrink-0"
+            onError={(e) => {
+              e.currentTarget.style.display = "none";
+            }}
+          />
+          {(!isCollapsed || isMobileOpen) && (
+            <h1 className="text-xl font-bold whitespace-nowrap overflow-hidden text-ellipsis">
               Bliss Lounge
             </h1>
-          </div>
-          {/* Collapse/Expand button for desktop */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setIsCollapsed(!isCollapsed)}
-            className="hidden md:flex absolute top-1/2 -right-4 -translate-y-1/2 bg-background hover:bg-muted/50 rounded-full border border-gray-200 shadow-sm"
-          >
-            {isCollapsed ? (
-              <ChevronsRight className="h-4 w-4" />
-            ) : (
-              <ChevronsLeft className="h-4 w-4" />
-            )}
-          </Button>
+          )}
         </div>
 
-        {/* Navigation Items */}
-        <ScrollArea className="flex-1 px-3">
-          <div className="space-y-1">
-            {sidebarNavItems.map((item) => (
-              <Button
-                key={item.href}
-                variant={pathname === item.href ? "secondary" : "ghost"}
-                className={cn(
-                  "w-full justify-start gap-2",
-                  pathname === item.href && "bg-secondary",
-                  isCollapsed && "justify-center"
-                )}
-                asChild
-                onClick={() => setIsMobileOpen(false)}
-              >
-                <Link href={item.href}>
-                  <item.icon className="h-4 w-4" />
-                  <span className={cn(isCollapsed && "hidden")}>
-                    {item.title}
-                  </span>
-                </Link>
-              </Button>
-            ))}
-          </div>
-        </ScrollArea>
-
-        {/* Footer Section (Logout) */}
-        <div className="p-4 mt-auto">
-          <Separator className="mb-4" />
-          <Button
-            variant="ghost"
-            className={cn(
-              "w-full justify-start gap-2 text-red-500 hover:text-red-600 hover:bg-red-50",
-              isCollapsed && "justify-center"
-            )}
-            onClick={() => setIsMobileOpen(false)}
-          >
-            <LogOut className="h-4 w-4" />
-            <span className={cn(isCollapsed && "hidden")}>Logout</span>
-          </Button>
+        {/* Navigation */}
+        <div className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+          {sidebarNavItems.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              onClick={isMobileOpen ? toggleMobile : undefined}
+              className={`flex items-center gap-3 p-3 rounded-lg transition-colors hover:bg-gray-100 ${
+                pathname === item.href
+                  ? "bg-gray-100 text-gray-900 font-medium"
+                  : "text-gray-700"
+              } ${isCollapsed && !isMobileOpen ? "justify-center" : ""}`}
+              title={isCollapsed && !isMobileOpen ? item.title : ""}
+            >
+              <item.icon className="h-5 w-5 flex-shrink-0" />
+              {(!isCollapsed || isMobileOpen) && (
+                <span className="whitespace-nowrap overflow-hidden text-ellipsis">
+                  {item.title}
+                </span>
+              )}
+            </Link>
+          ))}
         </div>
-      </aside>
+
+        {/* Logout */}
+        <div className="p-4 border-t">
+          <button
+            onClick={isMobileOpen ? toggleMobile : undefined}
+            className={`flex items-center gap-3 text-red-500 hover:bg-red-50 p-3 rounded-lg transition-colors w-full ${
+              isCollapsed && !isMobileOpen ? "justify-center" : ""
+            }`}
+            title={isCollapsed && !isMobileOpen ? "Logout" : ""}
+          >
+            <LogOut className="h-5 w-5 flex-shrink-0" />
+            {(!isCollapsed || isMobileOpen) && (
+              <span className="whitespace-nowrap overflow-hidden text-ellipsis">
+                Logout
+              </span>
+            )}
+          </button>
+        </div>
+      </div>
     </>
   );
 }

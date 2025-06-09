@@ -7,7 +7,6 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { PlusIcon } from "lucide-react";
 import { MenuItem } from "@/types";
-import { useCart } from "@/context/cart-context";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
@@ -17,12 +16,10 @@ interface MenuItemCardProps {
 
 export function MenuItemCard({ item }: MenuItemCardProps) {
   const [isHovering, setIsHovering] = useState(false);
-  const { addToCart } = useCart();
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    addToCart(item, 1);
   };
 
   const dietaryBadges = item.dietary?.map(diet => {
