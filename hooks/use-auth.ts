@@ -13,8 +13,8 @@ interface SignInResponse {
     createdAt: string;
     updatedAt: string;
   };
-  accessToken: string;
-  refreshToken: string;
+  access_token: string;
+  refresh_token: string;
 }
 
 interface SignInRequest {
@@ -34,8 +34,8 @@ export function useSignIn() {
     },
     onSuccess: (data) => {
       setUser(data.user);
-      setAccessToken(data.accessToken);
-      setRefreshToken(data.refreshToken);
+      setAccessToken(data.access_token);
+      setRefreshToken(data.refresh_token);
       toast.success("Successfully signed in!");
     },
     onError: (error) => {

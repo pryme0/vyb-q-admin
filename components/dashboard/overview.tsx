@@ -1,28 +1,41 @@
 "use client";
 
-import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import {
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+import { formatNaira } from "@/lib/utils";
 
-const data = [
-  { month: "Jan", revenue: 2500000 },
-  { month: "Feb", revenue: 2800000 },
-  { month: "Mar", revenue: 3200000 },
-  { month: "Apr", revenue: 3500000 },
-  { month: "May", revenue: 3800000 },
-  { month: "Jun", revenue: 4000000 },
-  { month: "Jul", revenue: 4125000 },
-];
+interface RevenueGraphPoint {
+  date: string;
+  revenue: number;
+}
 
-export function Overview() {
+interface OverviewProps {
+  data: RevenueGraphPoint[];
+}
+
+export function Overview({ data }: OverviewProps) {
   return (
     <div className="h-[400px] w-full">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data}>
-          <XAxis 
-            dataKey="month"
+          <XAxis
+            dataKey="date"
             stroke="#888888"
             fontSize={12}
             tickLine={false}
             axisLine={false}
+            tickFormatter={(value) =>
+              new Date(value).toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+              })
+            }
           />
           <YAxis
             stroke="#888888"
@@ -31,7 +44,7 @@ export function Overview() {
             axisLine={false}
             tickFormatter={(value) => `₦${(value / 1000000).toFixed(1)}M`}
           />
-          <Tooltip 
+          <Tooltip
             content={({ active, payload }) => {
               if (active && payload && payload.length) {
                 return (
@@ -42,14 +55,14 @@ export function Overview() {
                           Revenue
                         </span>
                         <span className="font-bold text-muted-foreground">
-                          ₦{(payload[0].value / 1000000).toFixed(2)}M
+                          {formatNaira(payload[0].value)}
                         </span>
                       </div>
                     </div>
                   </div>
-                )
+                );
               }
-              return null
+              return null;
             }}
           />
           <Line

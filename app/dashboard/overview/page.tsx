@@ -1,13 +1,75 @@
+"use client";
+
+import { useState, useMemo } from "react";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Overview } from "@/components/dashboard/overview";
 import { RecentOrders } from "@/components/dashboard/recent-orders";
 import { TopSellingItems } from "@/components/dashboard/top-selling-items";
 import { DollarSign, Users, ShoppingBag, TrendingUp } from "lucide-react";
+import { useAnalytics } from "@/hooks/useAnalytics";
+import { Button } from "@/components/ui/button";
+import { formatNaira } from "@/lib/utils";
 
 export default function DashboardPage() {
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
+  const [applyFilters, setApplyFilters] = useState(false);
+
+  const { analytics, menuItems, loading, error } = useAnalytics({
+    startDate: startDate ?? undefined,
+    endDate: endDate ?? undefined,
+  });
+
+  const menuItemOptions = Array.isArray(menuItems)
+    ? menuItems.map((item) => ({
+        value: item.id,
+        label: item.name,
+      }))
+    : [];
+
+  const handleFilter = () => {
+    setApplyFilters(true);
+  };
+
   return (
     <div className="space-y-6 p-4 sm:p-6 md:p-8 w-full">
       <h1 className="text-2xl sm:text-3xl font-bold">Dashboard Overview</h1>
+
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row gap-4 items-end">
+        <div className="flex-1">
+          <label className="text-sm font-medium">Date Range</label>
+          <div className="flex gap-2">
+            <DatePicker
+              selected={startDate}
+              onChange={(date) => {
+                setStartDate(date);
+                setApplyFilters(false);
+              }}
+              placeholderText="Start Date"
+              className="w-full border px-3 py-2 rounded-md text-sm"
+            />
+            <DatePicker
+              selected={endDate}
+              onChange={(date) => {
+                setEndDate(date);
+                setApplyFilters(false);
+              }}
+              placeholderText="End Date"
+              className="w-full border px-3 py-2 rounded-md text-sm"
+            />
+          </div>
+        </div>
+
+        <Button onClick={handleFilter} className="h-10">
+          Apply Filters
+        </Button>
+      </div>
+
+      {error && <div className="text-red-500">{error}</div>}
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -21,8 +83,21 @@ export default function DashboardPage() {
                 <p className="text-sm font-medium text-muted-foreground">
                   Total Revenue
                 </p>
-                <h3 className="text-xl sm:text-2xl font-bold">₦4,125,000</h3>
-                <p className="text-xs text-green-500">+15.2% from last month</p>
+                <h3 className="text-xl sm:text-2xl font-bold">
+                  {formatNaira(analytics?.totalRevenue || 0)}
+                </h3>
+                <p
+                  className={`text-xs ${
+                    analytics && analytics?.totalRevenueChange >= 0
+                      ? "text-green-500"
+                      : "text-red-500"
+                  }`}
+                >
+                  {analytics && analytics?.totalRevenueChange >= 0 ? "+" : ""}
+                  {(analytics && analytics?.totalRevenueChange?.toFixed(1)) ||
+                    "0.0"}
+                  % from last period
+                </p>
               </div>
             </div>
           </CardContent>
@@ -38,8 +113,20 @@ export default function DashboardPage() {
                 <p className="text-sm font-medium text-muted-foreground">
                   Total Orders
                 </p>
-                <h3 className="text-xl sm:text-2xl font-bold">2,145</h3>
-                <p className="text-xs text-green-500">+10.5% from last month</p>
+                <h3 className="text-xl sm:text-2xl font-bold">
+                  {analytics?.totalOrders || 0}
+                </h3>
+                <p
+                  className={`text-xs ${
+                    analytics && analytics?.totalOrdersChange >= 0
+                      ? "text-green-500"
+                      : "text-red-500"
+                  }`}
+                >
+                  {analytics && analytics?.totalOrdersChange >= 0 ? "+" : ""}
+                  {analytics?.totalOrdersChange?.toFixed(1) || "0.0"}% from last
+                  period
+                </p>
               </div>
             </div>
           </CardContent>
@@ -55,8 +142,20 @@ export default function DashboardPage() {
                 <p className="text-sm font-medium text-muted-foreground">
                   Total Customers
                 </p>
-                <h3 className="text-xl sm:text-2xl font-bold">1,234</h3>
-                <p className="text-xs text-green-500">+18.7% from last month</p>
+                <h3 className="text-xl sm:text-2xl font-bold">
+                  {analytics?.totalCustomers || 0}
+                </h3>
+                <p
+                  className={`text-xs ${
+                    analytics && analytics?.totalCustomersChange >= 0
+                      ? "text-green-500"
+                      : "text-red-500"
+                  }`}
+                >
+                  {analytics && analytics?.totalCustomersChange >= 0 ? "+" : ""}
+                  {analytics?.totalCustomersChange?.toFixed(1) || "0.0"}% from
+                  last period
+                </p>
               </div>
             </div>
           </CardContent>
@@ -72,8 +171,22 @@ export default function DashboardPage() {
                 <p className="text-sm font-medium text-muted-foreground">
                   Avg. Order Value
                 </p>
-                <h3 className="text-xl sm:text-2xl font-bold">₦15,750</h3>
-                <p className="text-xs text-green-500">+7.2% from last month</p>
+                <h3 className="text-xl sm:text-2xl font-bold">
+                  {formatNaira(analytics?.averageOrderValue || 0)}
+                </h3>
+                <p
+                  className={`text-xs ${
+                    analytics && analytics?.averageOrderValueChange >= 0
+                      ? "text-green-500"
+                      : "text-red-500"
+                  }`}
+                >
+                  {analytics && analytics?.averageOrderValueChange >= 0
+                    ? "+"
+                    : ""}
+                  {analytics?.averageOrderValueChange?.toFixed(1) || "0.0"}%
+                  from last period
+                </p>
               </div>
             </div>
           </CardContent>
@@ -87,7 +200,7 @@ export default function DashboardPage() {
             <CardTitle>Revenue Overview</CardTitle>
           </CardHeader>
           <CardContent>
-            <Overview />
+            <Overview data={analytics?.revenueGraph || []} />
           </CardContent>
         </Card>
 
@@ -96,7 +209,7 @@ export default function DashboardPage() {
             <CardTitle>Top Selling Items</CardTitle>
           </CardHeader>
           <CardContent>
-            <TopSellingItems />
+            <TopSellingItems items={analytics?.topSellingItems || []} />
           </CardContent>
         </Card>
       </div>

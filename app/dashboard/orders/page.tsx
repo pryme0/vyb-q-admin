@@ -40,6 +40,33 @@ export default function OrdersPage() {
     o.customer.fullName.toLowerCase().includes(search.toLowerCase())
   );
 
+  // Deduplicate orderItems by id
+  const uniqueOrderItems = details?.orderItems
+    ? Array.from(
+        new Map(details.orderItems.map((item) => [item.id, item])).values()
+      )
+    : [];
+
+  // Debug log
+  if (details?.orderItems) {
+    console.log(
+      "Order items:",
+      details.orderItems.map((item) => ({
+        id: item.id,
+        name: item.menuItem.name,
+        quantity: item.quantity,
+      }))
+    );
+    console.log(
+      "Unique order items:",
+      uniqueOrderItems.map((item) => ({
+        id: item.id,
+        name: item.menuItem.name,
+        quantity: item.quantity,
+      }))
+    );
+  }
+
   return (
     <div className="w-full p-4 space-y-6 flex flex-col">
       {/* Header + Search */}
@@ -176,7 +203,14 @@ export default function OrdersPage() {
                   <select
                     value={details.status}
                     onChange={(e) =>
-                      updateOrder.mutate({ status: e.target.value })
+                      updateOrder.mutate(
+                        { status: e.target.value },
+                        {
+                          onSuccess: () =>
+                            toast.success("Order status updated"),
+                          onError: () => toast.error("Failed to update status"),
+                        }
+                      )
                     }
                     className="border rounded px-3 py-2 w-full mt-1"
                   >
@@ -187,7 +221,7 @@ export default function OrdersPage() {
                       "out-for-delivery",
                     ].map((s) => (
                       <option key={s} value={s}>
-                        {s}
+                        {s.charAt(0).toUpperCase() + s.slice(1)}
                       </option>
                     ))}
                   </select>
@@ -213,12 +247,11 @@ export default function OrdersPage() {
               </div>
 
               {/* Order Items */}
-              {/* Order Items */}
               <div>
                 <p className="text-sm font-medium text-gray-600 mb-2">Items</p>
                 <div className="border rounded-md p-3 max-h-60 overflow-y-auto">
                   <ul className="space-y-3">
-                    {details.orderItems.map((item) => (
+                    {uniqueOrderItems.map((item) => (
                       <li
                         key={item.id}
                         className="flex items-center gap-4 border-b pb-2 last:border-b-0"

@@ -126,17 +126,17 @@ export default function MenuItemsPage() {
         </Button>
       </div>
 
-      <div className="flex gap-4 items-center">
-        <div className="relative flex-1">
+      <div className="flex flex-col sm:flex-row gap-4 items-center">
+        <div className="relative flex-1 w-full sm:w-auto">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
           <Input
             placeholder="Search menu items..."
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value);
-              setPage(1); // Reset to first page on search change
+              setPage(1);
             }}
-            className="pl-10"
+            className="pl-10 w-full"
           />
         </div>
         <Select
@@ -146,7 +146,7 @@ export default function MenuItemsPage() {
             setPage(1);
           }}
         >
-          <SelectTrigger className="w-48">
+          <SelectTrigger className="w-full sm:w-48">
             <SelectValue placeholder="Filter by category" />
           </SelectTrigger>
           <SelectContent>
@@ -232,7 +232,7 @@ export default function MenuItemsPage() {
 
       {/* Add Menu Item Dialog */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="w-full max-w-[90vw] sm:max-w-[700px] max-h-[80vh] overflow-y-auto px-4 py-6 sm:px-6">
           <DialogHeader>
             <DialogTitle>Add Menu Item</DialogTitle>
           </DialogHeader>
@@ -245,7 +245,7 @@ export default function MenuItemsPage() {
 
       {/* Edit Menu Item Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="w-full max-w-[90vw] sm:max-w-[700px] max-h-[80vh] overflow-y-auto px-4 py-6 sm:px-6">
           <DialogHeader>
             <DialogTitle>Edit Menu Item</DialogTitle>
           </DialogHeader>

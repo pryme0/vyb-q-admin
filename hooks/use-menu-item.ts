@@ -1,14 +1,30 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axiosBase from "@/lib/axios.base";
 
-// Define the shape of a MenuItem
 export interface MenuItem {
   id: string;
   name: string;
   description: string;
-  price: number;
+  price: string;
   categoryId: string;
-  image: any;
+  image?: File | undefined;
+  recipes?: Array<{
+    id?: string;
+    inventoryId: string;
+    quantity: string;
+    unit?: string;
+    inventory?: {
+      id: string;
+      itemName: string;
+      unit: string;
+    };
+  }>;
+  cost?: number;
+  isAvailable?: boolean;
+  category?: {
+    id: string;
+    name: string;
+  };
 }
 
 export const useMenuItems = (
