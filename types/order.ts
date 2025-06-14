@@ -81,4 +81,5 @@ export interface UseOrdersParams {
   customerId?: string;
   limit: number;
   page: number;
+  queryOptions: any;
 }

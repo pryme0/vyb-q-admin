@@ -44,11 +44,6 @@ export function Header({ toggleMobile, isMobileOpen }: HeaderProps) {
 
         {/* Push everything else to the right */}
         <div className="ml-auto flex items-center gap-4">
-          <Button variant="ghost" size="icon" className="relative">
-            <Bell className="h-5 w-5" />
-            <span className="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full" />
-          </Button>
-
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-8 w-8 rounded-full">

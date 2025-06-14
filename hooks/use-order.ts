@@ -7,7 +7,7 @@ interface UpdateOrderDto {
   notes?: string;
 }
 
-export const useOrders = ({ limit, page }: UseOrdersParams) => {
+export const useOrders = ({ limit, page, queryOptions }: UseOrdersParams) => {
   return useQuery({
     queryKey: ["orders", page],
     queryFn: async (): Promise<OrdersResponse> => {
@@ -19,6 +19,7 @@ export const useOrders = ({ limit, page }: UseOrdersParams) => {
       return response.data;
     },
     enabled: !!page,
+    ...queryOptions,
   });
 };
 

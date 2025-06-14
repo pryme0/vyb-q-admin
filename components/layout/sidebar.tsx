@@ -81,7 +81,7 @@ export function Sidebar({ isMobileOpen, toggleMobile }: SidebarProps) {
         <div className="p-6 flex items-center gap-2 border-b lg:border-b-0">
           <Image
             src="/blissLounge.png"
-            alt="Bliss Lounge Logo"
+            alt="Royal Bistro Logo"
             width={40}
             height={40}
             className="rounded-full object-cover flex-shrink-0"
@@ -91,7 +91,7 @@ export function Sidebar({ isMobileOpen, toggleMobile }: SidebarProps) {
           />
           {(!isCollapsed || isMobileOpen) && (
             <h1 className="text-xl font-bold whitespace-nowrap overflow-hidden text-ellipsis">
-              Bliss Lounge
+              Royal Bistro
             </h1>
           )}
         </div>

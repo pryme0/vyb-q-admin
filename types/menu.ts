@@ -4,12 +4,6 @@ export interface PaginationQueryDto {
   search?: string;
 }
 
-export type Category = {
-  id: string;
-  name: string;
-  description?: string;
-};
-
 export type MenuItem = {
   id: string;
   name: string;

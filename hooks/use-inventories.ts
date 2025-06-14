@@ -72,3 +72,58 @@ export function useDeleteInventory() {
     },
   });
 }
+
+export interface InventoryMetrics {
+  total_inventory_value: number;
+  total_variance_cost: number;
+  profit_loss_value: number;
+}
+
+export interface InventoryMetricsFilters {
+  startDate?: string;
+  endDate?: string;
+}
+
+async function getInventoryMetrics(
+  filters: InventoryMetricsFilters = {}
+): Promise<InventoryMetrics> {
+  const response = await axiosBase.get("/analytics/inventory-metrics", {
+    params: {
+      startDate: filters.startDate,
+      endDate: filters.endDate,
+    },
+  });
+  console.log("getInventoryMetrics response:", {
+    data: response.data,
+    filters,
+    timestamp: new Date().toISOString(),
+  });
+  return response.data;
+}
+
+export function useGetInventoryMetrics(
+  filters: InventoryMetricsFilters = {},
+  queryOptions: { enabled?: boolean } = {}
+) {
+  return useQuery<InventoryMetrics, Error>({
+    queryKey: ["inventoryMetrics", filters],
+    queryFn: () => getInventoryMetrics(filters),
+    enabled: queryOptions.enabled ?? true,
+    onError: (error) => {
+      console.error("useGetInventoryMetrics error:", {
+        error: error.message,
+        filters,
+        timestamp: new Date().toISOString(),
+      });
+      toast.error(`Failed to fetch inventory metrics: ${error.message}`);
+    },
+
+    onSuccess: (data) => {
+      console.log("useGetInventoryMetrics onSuccess:", {
+        data,
+        filters,
+        timestamp: new Date().toISOString(),
+      });
+    },
+  });
+}
