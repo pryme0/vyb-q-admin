@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuthStore } from "@/store";
+import Link from "next/link";
 
 interface HeaderProps {
   toggleMobile: () => void;
@@ -54,8 +55,9 @@ export function Header({ toggleMobile, isMobileOpen }: HeaderProps) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56" align="end">
-              <DropdownMenuItem>Profile</DropdownMenuItem>
-              <DropdownMenuItem>Settings</DropdownMenuItem>
+              <Link href="/dashboard/settings">
+                <DropdownMenuItem>Profile</DropdownMenuItem>
+              </Link>
               <DropdownMenuItem
                 onClick={() => logout()}
                 className="text-red-500 cursor-pointer"

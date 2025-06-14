@@ -19,6 +19,7 @@ import {
   ChevronRight,
   ShoppingCart,
 } from "lucide-react";
+import { useAuthStore } from "@/store";
 
 const sidebarNavItems = [
   { title: "Dashboard", href: "/dashboard/overview", icon: LayoutDashboard },
@@ -43,6 +44,8 @@ export function Sidebar({ isMobileOpen, toggleMobile }: SidebarProps) {
   const toggleSidebar = () => {
     setIsCollapsed(!isCollapsed);
   };
+
+  const { logout } = useAuthStore();
 
   return (
     <>
@@ -77,21 +80,12 @@ export function Sidebar({ isMobileOpen, toggleMobile }: SidebarProps) {
           )}
         </button>
 
-        {/* Logo */}
         <div className="p-6 flex items-center gap-2 border-b lg:border-b-0">
-          <Image
-            src="/blissLounge.png"
-            alt="Royal Bistro Logo"
-            width={40}
-            height={40}
-            className="rounded-full object-cover flex-shrink-0"
-            onError={(e) => {
-              e.currentTarget.style.display = "none";
-            }}
-          />
-          {(!isCollapsed || isMobileOpen) && (
+          {isCollapsed && !isMobileOpen ? (
+            <span className="text-2xl font-bold text-primary">VQ</span> // or just logo icon
+          ) : (
             <h1 className="text-xl font-bold whitespace-nowrap overflow-hidden text-ellipsis">
-              Royal Bistro
+              Vybe <span className="text-primary ml-1">Q</span>
             </h1>
           )}
         </div>
@@ -123,7 +117,10 @@ export function Sidebar({ isMobileOpen, toggleMobile }: SidebarProps) {
         {/* Logout */}
         <div className="p-4 border-t">
           <button
-            onClick={isMobileOpen ? toggleMobile : undefined}
+            onClick={() => {
+              logout();
+              isMobileOpen ? toggleMobile : undefined;
+            }}
             className={`flex items-center gap-3 text-red-500 hover:bg-red-50 p-3 rounded-lg transition-colors w-full ${
               isCollapsed && !isMobileOpen ? "justify-center" : ""
             }`}

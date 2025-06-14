@@ -56,10 +56,8 @@ export default function MenuItemsPage() {
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [page, setPage] = useState(1);
 
-  // Categories pagination
   const [categoryCursor, setCategoryCursor] = useState("");
 
-  // Fetch categories
   const {
     data: categoriesData,
     isLoading: isCategoriesLoading,
@@ -68,7 +66,6 @@ export default function MenuItemsPage() {
 
   const categories = categoriesData?.data || [];
 
-  // Fetch menu items with filters
   const { data, isLoading, error } = useMenuItems(
     page,
     10,
@@ -86,7 +83,6 @@ export default function MenuItemsPage() {
       toast.success("Menu item added successfully");
       setIsAddDialogOpen(false);
     } catch (error) {
-      console.log({ error });
       toast.error("Failed to add menu item");
     }
   };
@@ -181,12 +177,17 @@ export default function MenuItemsPage() {
         {data?.data &&
           data?.data.map((item) => (
             <Card key={item.id}>
-              <CardHeader>
+              <CardHeader className="relative p-0">
                 <img
                   src={item.imageUrl}
                   alt={item.name}
                   className="w-full h-48 object-cover rounded-t-lg"
                 />
+                {!item.isAvailable && (
+                  <span className="absolute top-2 left-2 bg-red-500 text-white text-xs font-semibold px-2 py-1 rounded">
+                    Out of Stock
+                  </span>
+                )}
               </CardHeader>
               <CardContent>
                 <CardTitle className="mb-2">{item.name}</CardTitle>
