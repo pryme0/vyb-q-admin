@@ -17,8 +17,9 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Search, Plus, Loader2, Eye } from "lucide-react";
-import { useOrders, useOrderDetails, useUpdateOrder } from "@/hooks";
+import { Search, Loader2, Eye } from "lucide-react";
+import { useOrders, useOrderDetails } from "@/hooks";
+import { useUpdateOrder } from "@/hooks/use-order"; // Make sure it's imported from the correct file
 import { Order } from "@/types";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -34,17 +35,10 @@ import {
 // Custom debounce hook
 function useDebounce<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
-
   useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
-
-    return () => {
-      clearTimeout(handler);
-    };
+    const handler = setTimeout(() => setDebouncedValue(value), delay);
+    return () => clearTimeout(handler);
   }, [value, delay]);
-
   return debouncedValue;
 }
 
@@ -64,7 +58,7 @@ export default function OrdersPage() {
     page,
     limit,
     queryOptions: {
-      refetchInterval: isPageVisible ? 60000 : false, // Refetch every 1 minute if page is visible
+      refetchInterval: isPageVisible ? 60000 : false,
     },
   });
   const orders = resp?.data || [];
@@ -72,15 +66,11 @@ export default function OrdersPage() {
 
   const { data: details, isLoading: isDetailsLoading } =
     useOrderDetails(viewOrderId);
-  const { mutate: updateOrder, isPending: isUpdating } = useUpdateOrder(
-    viewOrderId || ""
-  );
+  const { mutate: updateOrder, isPending: isUpdating } = useUpdateOrder();
 
-  // Handle page visibility for refetching
   useEffect(() => {
-    const handleVisibilityChange = () => {
+    const handleVisibilityChange = () =>
       setIsPageVisible(document.visibilityState === "visible");
-    };
     document.addEventListener("visibilitychange", handleVisibilityChange);
     return () =>
       document.removeEventListener("visibilitychange", handleVisibilityChange);
@@ -90,7 +80,6 @@ export default function OrdersPage() {
     o.customer.fullName.toLowerCase().includes(debouncedSearch.toLowerCase())
   );
 
-  // Deduplicate orderItems by id
   const uniqueOrderItems = details?.orderItems
     ? Array.from(
         new Map(details.orderItems.map((item) => [item.id, item])).values()
@@ -99,14 +88,10 @@ export default function OrdersPage() {
 
   const handleStatusUpdate = (id: string, status: string) => {
     updateOrder(
-      { status },
+      { orderId: id, dto: { status } },
       {
-        onSuccess: () => {
-          toast.success(`Order updated to ${status}!`);
-        },
-        onError: () => {
-          toast.error("Failed to update status");
-        },
+        onSuccess: () => toast.success(`Order updated to ${status}!`),
+        onError: () => toast.error("Failed to update status"),
       }
     );
   };
@@ -119,16 +104,13 @@ export default function OrdersPage() {
 
   return (
     <div className="space-y-6 p-4 sm:p-6">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h1 className="text-3xl font-bold">Orders</h1>
-        {/* Placeholder for future "New Order" button */}
       </div>
 
-      {/* Search Bar */}
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
         <div className="relative w-full sm:min-w-[300px] sm:flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
           <Input
             placeholder="Search by customer name..."
             value={search}
@@ -141,17 +123,16 @@ export default function OrdersPage() {
         </div>
       </div>
 
-      {/* Table */}
       <div className="border rounded-lg overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="whitespace-nowrap">ID</TableHead>
-              <TableHead className="whitespace-nowrap">Customer</TableHead>
-              <TableHead className="whitespace-nowrap">Total</TableHead>
-              <TableHead className="whitespace-nowrap">Status</TableHead>
-              <TableHead className="whitespace-nowrap">Date</TableHead>
-              <TableHead className="whitespace-nowrap">Actions</TableHead>
+              <TableHead>ID</TableHead>
+              <TableHead>Customer</TableHead>
+              <TableHead>Total</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Date</TableHead>
+              <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -168,45 +149,40 @@ export default function OrdersPage() {
                 </TableCell>
               </TableRow>
             ) : (
-              filtered.map((o: Order) => (
+              filtered.map((o) => (
                 <TableRow key={o.id}>
-                  <TableCell className="whitespace-nowrap">
-                    #{o.id.slice(0, 8)}
-                  </TableCell>
-                  <TableCell className="whitespace-nowrap">
-                    {o.customer.fullName}
-                  </TableCell>
-                  <TableCell className="whitespace-nowrap">
+                  <TableCell>#{o.id.slice(0, 8)}</TableCell>
+                  <TableCell>{o.customer.fullName}</TableCell>
+                  <TableCell>
                     ₦{parseFloat(o.totalPrice.toString()).toFixed(2)}
                   </TableCell>
-                  <TableCell className="whitespace-nowrap">
-                    <div
+                  <TableCell>
+                    <span
                       className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium
-                        ${
-                          o.status === "completed"
-                            ? "bg-green-100 text-green-800"
-                            : o.status === "pending"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : o.status === "cancelled"
-                            ? "bg-red-100 text-red-800"
-                            : o.status === "out-for-delivery"
-                            ? "bg-blue-100 text-blue-800"
-                            : "bg-gray-100 text-gray-800"
-                        }`}
+                      ${
+                        o.status === "completed"
+                          ? "bg-green-100 text-green-800"
+                          : o.status === "pending"
+                          ? "bg-yellow-100 text-yellow-800"
+                          : o.status === "cancelled"
+                          ? "bg-red-100 text-red-800"
+                          : o.status === "out-for-delivery"
+                          ? "bg-blue-100 text-blue-800"
+                          : "bg-gray-100 text-gray-800"
+                      }`}
                     >
                       {o.status.charAt(0).toUpperCase() + o.status.slice(1)}
-                    </div>
+                    </span>
                   </TableCell>
-                  <TableCell className="whitespace-nowrap">
+                  <TableCell>
                     {new Date(o.createdAt).toLocaleDateString()}
                   </TableCell>
-                  <TableCell className="whitespace-nowrap">
+                  <TableCell>
                     <div className="flex gap-2 items-center">
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => setViewOrderId(o.id)}
-                        aria-label={`View order ${o.id}`}
                       >
                         <Eye className="h-4 w-4" />
                       </Button>
@@ -242,7 +218,6 @@ export default function OrdersPage() {
         </Table>
       </div>
 
-      {/* Pagination */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <p className="text-sm text-muted-foreground">
           Showing {(page - 1) * limit + 1} to{" "}
@@ -269,7 +244,6 @@ export default function OrdersPage() {
         </div>
       </div>
 
-      {/* View Dialog */}
       <Dialog open={!!viewOrderId} onOpenChange={() => setViewOrderId("")}>
         <DialogContent className="max-w-lg w-full max-h-[90vh] overflow-y-auto">
           <DialogHeader>

@@ -35,12 +35,14 @@ export function useOrderDetails(id: string) {
   });
 }
 
-export function useUpdateOrder(orderId: string) {
+export function useUpdateOrder() {
   const qc = useQueryClient();
-  return useMutation<Order, Error, UpdateOrderDto>({
-    mutationFn: (dto) =>
+
+  return useMutation<Order, Error, { orderId: string; dto: UpdateOrderDto }>({
+    mutationFn: ({ orderId, dto }) =>
       axiosBase.patch(`/orders/${orderId}`, dto).then((r) => r.data),
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
+      const { orderId } = variables;
       qc.invalidateQueries({ queryKey: ["order", orderId] });
       qc.invalidateQueries({ queryKey: ["orders"] });
     },
