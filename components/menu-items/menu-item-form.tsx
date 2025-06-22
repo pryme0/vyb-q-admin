@@ -272,7 +272,7 @@ export function MenuItemForm({
   };
 
   return (
-    <div className="flex flex-col max-w-2xl mx-auto p-4 sm:p-6">
+    <div className="flex flex-col w-full mx-auto p-4 sm:p-6">
       <FormProvider {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
           {/* Name */}
@@ -333,7 +333,7 @@ export function MenuItemForm({
 
           {/* Recipes */}
           <div className="space-y-4">
-            <FormLabel>Items</FormLabel>
+            <FormLabel className="mr-4">Items</FormLabel>
             {isInitialInventoriesLoading ? (
               <div className="text-sm text-gray-600">
                 Loading recipe inventory items...
@@ -372,7 +372,7 @@ export function MenuItemForm({
                           </Button>
                         </FormControl>
                       </PopoverTrigger>
-                      <PopoverContent className="w-[calc(100vw-2rem)] sm:w-[400px] p-0">
+                      <PopoverContent className="w-[calc(100vw-2rem)] sm:w-full p-0">
                         <Command>
                           <CommandInput
                             placeholder="Search inventory..."

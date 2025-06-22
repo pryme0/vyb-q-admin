@@ -177,7 +177,7 @@ export default function MenuItemsPage() {
         {data?.data &&
           data?.data.map((item) => (
             <Card key={item.id}>
-              <CardHeader className="relative p-0">
+              <CardHeader className="relative p-0 mb-6">
                 <img
                   src={item.imageUrl}
                   alt={item.name}
