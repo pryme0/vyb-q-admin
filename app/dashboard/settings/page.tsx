@@ -41,7 +41,7 @@ export default function SettingsPage() {
           <div className="grid gap-6">
             <div className="space-y-2">
               <Label htmlFor="restaurantName">Restaurant Name</Label>
-              <Input id="restaurantName" defaultValue="Vybe Q" />
+              <Input id="restaurantName" defaultValue="Royal Bistro" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="address">Address</Label>
@@ -53,7 +53,7 @@ export default function SettingsPage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" defaultValue="info@vybeQ.com" />
+              <Input id="email" type="email" defaultValue="info@royalbistro.com" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="operatingHours">Operating Hours</Label>

@@ -6,8 +6,8 @@ import Providers from "@/lib/providers";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Vybe Q Admin",
-  description: "Restaurant Management Platform",
+  title: "Royal Bistro Admin",
+  description: "Restaurant Management Interface",
 };
 
 export default function RootLayout({

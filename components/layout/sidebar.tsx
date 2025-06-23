@@ -85,7 +85,7 @@ export function Sidebar({ isMobileOpen, toggleMobile }: SidebarProps) {
             <span className="text-2xl font-bold text-primary">VQ</span> // or just logo icon
           ) : (
             <h1 className="text-xl font-bold whitespace-nowrap overflow-hidden text-ellipsis">
-              Vybe <span className="text-primary ml-1">Q</span>
+              Royal Bistro
             </h1>
           )}
         </div>
