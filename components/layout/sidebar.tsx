@@ -80,13 +80,33 @@ export function Sidebar({ isMobileOpen, toggleMobile }: SidebarProps) {
           )}
         </button>
 
-        <div className="p-6 flex items-center gap-2 border-b lg:border-b-0">
+        {/* Logo Section */}
+        <div className="p-6 flex items-center gap-3 border-b lg:border-b-0">
           {isCollapsed && !isMobileOpen ? (
-            <span className="text-2xl font-bold text-primary">VQ</span> // or just logo icon
+            <div className="flex items-center justify-center">
+              <Image
+                src="/logo.JPG"
+                alt="Royal Bistro Logo"
+                width={32}
+                height={32}
+                className="object-contain rounded-sm"
+                priority
+              />
+            </div>
           ) : (
-            <h1 className="text-xl font-bold whitespace-nowrap overflow-hidden text-ellipsis">
-              Royal Bistro
-            </h1>
+            <div className="flex items-center gap-3">
+              <Image
+                src="/logo.JPG"
+                alt="Royal Bistro Logo"
+                width={40}
+                height={40}
+                className="object-contain rounded-sm flex-shrink-0"
+                priority
+              />
+              <h1 className="text-xl font-bold whitespace-nowrap overflow-hidden text-ellipsis">
+                Royal Bistro
+              </h1>
+            </div>
           )}
         </div>
 
