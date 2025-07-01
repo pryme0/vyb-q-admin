@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Plus, Edit, Trash2 } from "lucide-react";
+import { Search, Plus, Edit, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -55,6 +55,7 @@ export default function MenuItemsPage() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   const [categoryCursor, setCategoryCursor] = useState("");
 
@@ -68,7 +69,7 @@ export default function MenuItemsPage() {
 
   const { data, isLoading, error } = useMenuItems(
     page,
-    10,
+    pageSize,
     categoryFilter !== "all" ? categoryFilter : undefined,
     debouncedSearchQuery !== "" ? debouncedSearchQuery : undefined
   );
@@ -76,6 +77,12 @@ export default function MenuItemsPage() {
   const createMenuItem = useCreateMenuItem();
   const updateMenuItem = useUpdateMenuItem();
   const deleteMenuItem = useDeleteMenuItem();
+
+  // Pagination calculations
+  const totalItems = data?.total || 0;
+  const totalPages = Math.ceil(totalItems / pageSize);
+  const startItem = (page - 1) * pageSize + 1;
+  const endItem = Math.min(page * pageSize, totalItems);
 
   const handleAddItem = async (data: any) => {
     try {
@@ -110,6 +117,66 @@ export default function MenuItemsPage() {
     } catch {
       toast.error("Failed to delete menu item");
     }
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+    // Scroll to top when page changes
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handlePageSizeChange = (newPageSize: string) => {
+    setPageSize(Number(newPageSize));
+    setPage(1); // Reset to first page when page size changes
+  };
+
+  // Generate page numbers for pagination
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxVisiblePages = 5;
+    
+    if (totalPages <= maxVisiblePages) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      // Always show first page
+      pages.push(1);
+      
+      // Calculate range around current page
+      let start = Math.max(2, page - 1);
+      let end = Math.min(totalPages - 1, page + 1);
+      
+      // Adjust range if we're near the beginning or end
+      if (page <= 3) {
+        end = Math.min(totalPages - 1, 4);
+      }
+      if (page >= totalPages - 2) {
+        start = Math.max(2, totalPages - 3);
+      }
+      
+      // Add ellipsis if there's a gap
+      if (start > 2) {
+        pages.push('...');
+      }
+      
+      // Add middle pages
+      for (let i = start; i <= end; i++) {
+        pages.push(i);
+      }
+      
+      // Add ellipsis if there's a gap
+      if (end < totalPages - 1) {
+        pages.push('...');
+      }
+      
+      // Always show last page
+      if (totalPages > 1) {
+        pages.push(totalPages);
+      }
+    }
+    
+    return pages;
   };
 
   return (
@@ -164,7 +231,25 @@ export default function MenuItemsPage() {
             )}
           </SelectContent>
         </Select>
+        <Select value={pageSize.toString()} onValueChange={handlePageSizeChange}>
+          <SelectTrigger className="w-full sm:w-32">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="5">5 per page</SelectItem>
+            <SelectItem value="10">10 per page</SelectItem>
+            <SelectItem value="20">20 per page</SelectItem>
+            <SelectItem value="50">50 per page</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
+
+      {/* Results summary */}
+      {data?.data && (
+        <div className="text-sm text-muted-foreground">
+          Showing {startItem} to {endItem} of {totalItems} menu items
+        </div>
+      )}
 
       {isLoading && (
         <div className="p-4 text-center text-gray-500 border rounded-lg">
@@ -230,6 +315,60 @@ export default function MenuItemsPage() {
             </Card>
           ))}
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4">
+          <div className="text-sm text-muted-foreground">
+            Page {page} of {totalPages}
+          </div>
+          
+          <div className="flex items-center gap-2">
+            {/* Previous button */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(page - 1)}
+              disabled={page === 1}
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Previous
+            </Button>
+
+            {/* Page numbers */}
+            <div className="flex items-center gap-1">
+              {getPageNumbers().map((pageNum, index) => (
+                pageNum === '...' ? (
+                  <span key={`ellipsis-${index}`} className="px-2 text-muted-foreground">
+                    ...
+                  </span>
+                ) : (
+                  <Button
+                    key={pageNum}
+                    variant={page === pageNum ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => handlePageChange(pageNum as number)}
+                    className="w-10 h-10"
+                  >
+                    {pageNum}
+                  </Button>
+                )
+              ))}
+            </div>
+
+            {/* Next button */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(page + 1)}
+              disabled={page === totalPages}
+            >
+              Next
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Add Menu Item Dialog */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
