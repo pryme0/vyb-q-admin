@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -50,6 +51,7 @@ const formSchema = z.object({
       "Must be a valid positive number"
     ),
   categoryId: z.string().min(1, "Please select a category"),
+  featured: z.boolean().default(false),
   image: z.any().optional(),
   recipes: z
     .array(
@@ -89,8 +91,6 @@ export function MenuItemForm({
   const [inventorySearchQueries, setInventorySearchQueries] = useState<
     string[]
   >([]);
-
-  console.log("initialData:", initialData);
 
   const {
     data: categoryData,
@@ -162,6 +162,7 @@ export function MenuItemForm({
     ? {
         ...initialData,
         price: initialData.price?.toString() || "",
+        featured: Boolean(initialData.featured),
         recipes:
           initialData.recipes?.map((recipe: any) => ({
             inventoryId: recipe.inventoryId?.toString() || "",
@@ -176,6 +177,7 @@ export function MenuItemForm({
         description: "",
         price: "",
         categoryId: "",
+        featured: false,
         image: "",
         recipes: [],
       };
@@ -193,19 +195,14 @@ export function MenuItemForm({
   const watchedRecipes = form.watch("recipes");
 
   useEffect(() => {
-    console.log("Normalized initial data:", normalizedInitialData);
     form.reset(normalizedInitialData);
   }, [initialData, form]);
 
   useEffect(() => {
     setInventorySearchQueries(fields.map(() => ""));
-    console.log("Fields updated:", fields);
   }, [fields.length]);
 
-  useEffect(() => {
-    console.log("Watched recipes:", watchedRecipes);
-    console.log("Inventories:", inventories);
-  }, [watchedRecipes, inventories]);
+  useEffect(() => {}, [watchedRecipes, inventories]);
 
   const handleSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsLoading(true);
@@ -215,6 +212,7 @@ export function MenuItemForm({
       formData.append("description", values.description);
       formData.append("price", values.price);
       formData.append("categoryId", values.categoryId);
+      formData.append("featured", values.featured.toString());
       if (values.image instanceof File) {
         formData.append("image", values.image);
       }
@@ -223,7 +221,6 @@ export function MenuItemForm({
           const inventory = inventories.find(
             (inv) => inv.id === recipe.inventoryId
           );
-          console.log("Recipe:", recipe, "Inventory:", inventory);
           return {
             ...recipe,
             unit: inventory?.unit || recipe.unit || "kg",
@@ -232,7 +229,6 @@ export function MenuItemForm({
         formData.append("recipes", JSON.stringify(recipesWithUnits));
       }
 
-      console.log("Form data:", Object.fromEntries(formData));
       await onSubmit(formData);
       toast.success(
         initialData ? "Item updated successfully" : "Item created successfully"
@@ -326,6 +322,29 @@ export function MenuItemForm({
                     {...field}
                   />
                 </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Featured Checkbox */}
+          <FormField
+            control={form.control}
+            name="featured"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                <FormControl>
+                  <Checkbox
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+                <div className="space-y-1 leading-none">
+                  <FormLabel>Featured Item</FormLabel>
+                  <p className="text-sm text-muted-foreground">
+                    Mark this item as featured to highlight it in your menu
+                  </p>
+                </div>
                 <FormMessage />
               </FormItem>
             )}
