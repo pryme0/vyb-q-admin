@@ -37,7 +37,12 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { toast } from "sonner";
-import { useCategories, useGetInventories, useDebounce } from "@/hooks";
+import {
+  useSubCategories,
+  useCategories,
+  useGetInventories,
+  useDebounce,
+} from "@/hooks";
 import { ChevronDown, Trash2, Plus, Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -51,6 +56,7 @@ const formSchema = z.object({
       "Must be a valid positive number"
     ),
   categoryId: z.string().min(1, "Please select a category"),
+  subCategoryId: z.string().min(1, "Please select a subcategory"),
   featured: z.boolean().default(false),
   image: z.any().optional(),
   recipes: z
@@ -91,12 +97,27 @@ export function MenuItemForm({
   const [inventorySearchQueries, setInventorySearchQueries] = useState<
     string[]
   >([]);
+  const [subCategoryCursor, setSubCategoryCursor] = useState("");
+  const [subCategories, setSubCategories] = useState<any[]>([]);
 
   const {
     data: categoryData,
     isLoading: isCategoriesLoading,
     isError: isCategoriesError,
   } = useCategories(10, categoryCursor);
+
+  const {
+    data: subCategoryData,
+    isLoading: isSubCategoriesLoading,
+    isError: isSubCategoriesError,
+  } = useSubCategories(50, subCategoryCursor);
+
+
+  const handleLoadMoreSubCategories = () => {
+    if (subCategoryData?.meta?.hasNextPage) {
+      setSubCategoryCursor(subCategoryData.meta.nextCursor);
+    }
+  };
 
   const debouncedSearchQuery = useDebounce(
     inventorySearchQueries[openInventory ?? 0] || "",
@@ -136,6 +157,17 @@ export function MenuItemForm({
   }, [categoryData]);
 
   useEffect(() => {
+    if (subCategoryData?.data) {
+      setSubCategories((prev) => {
+        const newItems = subCategoryData.data.filter(
+          (item) => !prev.some((c) => c.id === item.id)
+        );
+        return [...prev, ...newItems];
+      });
+    }
+  }, [subCategoryData]);
+
+  useEffect(() => {
     if (inventoryData?.data) {
       setInventories((prev) => {
         const newItems = inventoryData.data.filter(
@@ -163,6 +195,7 @@ export function MenuItemForm({
         ...initialData,
         price: initialData.price?.toString() || "",
         featured: Boolean(initialData.featured),
+        subCategoryId: initialData?.subCategoryId || "",
         recipes:
           initialData.recipes?.map((recipe: any) => ({
             inventoryId: recipe.inventoryId?.toString() || "",
@@ -177,6 +210,7 @@ export function MenuItemForm({
         description: "",
         price: "",
         categoryId: "",
+        subCategoryId: "",
         featured: false,
         image: "",
         recipes: [],
@@ -212,6 +246,7 @@ export function MenuItemForm({
       formData.append("description", values.description);
       formData.append("price", values.price);
       formData.append("categoryId", values.categoryId);
+      formData.append("subCategoryId", values.subCategoryId);
       formData.append("featured", values.featured.toString());
       if (values.image instanceof File) {
         formData.append("image", values.image);
@@ -416,7 +451,6 @@ export function MenuItemForm({
                                   key={`${item.id}-${index}`}
                                   value={item.itemName}
                                   onSelect={() => {
-                                    console.log("Selected inventory:", item);
                                     form.setValue(
                                       `recipes.${index}.inventoryId` as const,
                                       item.id
@@ -576,6 +610,59 @@ export function MenuItemForm({
                               variant="outline"
                               size="sm"
                               onClick={handleLoadMoreCategories}
+                            >
+                              Load More
+                              <ChevronDown className="ml-2 h-4 w-4" />
+                            </Button>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="subCategoryId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Subcategory</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger className="h-10">
+                      <SelectValue placeholder="Select a subcategory" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {isSubCategoriesLoading ? (
+                      <SelectItem disabled value="loading">
+                        Loading subcategories...
+                      </SelectItem>
+                    ) : isSubCategoriesError ? (
+                      <SelectItem disabled value="error">
+                        Error loading subcategories
+                      </SelectItem>
+                    ) : (
+                      <>
+                        {subCategories.map((sub) => (
+                          <SelectItem key={sub.id} value={sub.id}>
+                            {sub.name}
+                          </SelectItem>
+                        ))}
+                        {subCategoryData?.meta?.hasNextPage && (
+                          <div className="flex justify-center mt-2">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={handleLoadMoreSubCategories}
                             >
                               Load More
                               <ChevronDown className="ml-2 h-4 w-4" />

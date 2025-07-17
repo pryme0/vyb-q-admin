@@ -30,3 +30,25 @@ export const useCategories = (limit: number, cursor: string) => {
     },
   });
 };
+
+export const useSubCategories = (limit: number, cursor: string) => {
+  return useQuery({
+    queryKey: ["sub-categories", cursor],
+    queryFn: async (): Promise<{
+      data: CategoryItem[];
+      meta: {
+        totalCount: number;
+        hasNextPage: boolean;
+        hasPreviousPage: boolean;
+        nextCursor: string;
+        previousCursor: string;
+      };
+    }> => {
+      const response = await axiosBase.get(
+        `/categories/subcategories?limit=${limit}&cursor=${cursor}`
+      );
+
+      return response.data;
+    },
+  });
+};
