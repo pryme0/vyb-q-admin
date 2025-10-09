@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Plus, Edit, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Search, Plus, Edit, Trash2, ChevronLeft, ChevronRight, Tag } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -35,6 +36,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { MenuItemForm } from "@/components/menu-items/menu-item-form";
+import { MenuItemDiscountBadge } from "@/components/menu-items/menu-item-discount-badge";
 import { toast } from "sonner";
 import {
   useMenuItems,
@@ -44,6 +46,7 @@ import {
   useCategories,
   MenuItem,
   useDebounce,
+  useBestDiscount,
 } from "@/hooks";
 
 export default function MenuItemsPage() {
@@ -279,10 +282,11 @@ export default function MenuItemsPage() {
                 <p className="text-sm text-muted-foreground mb-2">
                   {item.description}
                 </p>
-                <div className="flex justify-between items-center">
-                  <span className="font-semibold">
-                    ₦{Number(item.price).toLocaleString()}
-                  </span>
+                <div className="flex justify-between items-start mb-2">
+                  <MenuItemDiscountBadge
+                    menuItemId={item.id}
+                    originalPrice={Number(item.price)}
+                  />
                   <span className="text-sm text-muted-foreground">
                     {item.category.name}
                   </span>

@@ -18,6 +18,8 @@ import {
   ChevronLeft,
   ChevronRight,
   ShoppingCart,
+  Calendar,
+  Tag,
 } from "lucide-react";
 import { useAuthStore } from "@/store";
 
@@ -26,8 +28,10 @@ const sidebarNavItems = [
   { title: "Orders", href: "/dashboard/orders", icon: ShoppingCart },
   { title: "Customers", href: "/dashboard/customers", icon: Users },
   { title: "Menu Items", href: "/dashboard/menu-items", icon: ChefHat },
+  { title: "Discounts", href: "/dashboard/discounts", icon: Tag },
   { title: "Inventory", href: "/dashboard/inventory", icon: Package },
   { title: "Reservations", href: "/dashboard/reservations", icon: Clock },
+  { title: "Events", href: "/dashboard/events", icon: Calendar },
   { title: "Reports", href: "/dashboard/reports", icon: FileText },
   { title: "Settings", href: "/dashboard/settings", icon: Settings },
 ];

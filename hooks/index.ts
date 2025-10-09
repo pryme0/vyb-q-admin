@@ -8,3 +8,5 @@ export * from "./use-categories";
 export * from "./use-debounce";
 export * from "./use-order";
 export * from "./useAnalytics";
+export * from "./use-events";
+export * from "./use-discounts";
