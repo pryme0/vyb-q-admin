@@ -18,25 +18,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+  CustomSelect,
+  CustomSelectItem,
+} from "@/components/ui/custom-select";
 import { toast } from "sonner";
 import {
   useSubCategories,
@@ -44,8 +28,7 @@ import {
   useGetInventories,
   useDebounce,
 } from "@/hooks";
-import { ChevronDown, Trash2, Plus, Check, ChevronsUpDown } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { ChevronDown, Trash2, Plus, Search, X } from "lucide-react";
 
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -90,16 +73,14 @@ export function MenuItemForm({
 }: MenuItemFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [categoryCursor, setCategoryCursor] = useState("");
-  const [inventoryPage, setInventoryPage] = useState("1");
+  const [inventorySearch, setInventorySearch] = useState("");
+  const [inventoryPage, setInventoryPage] = useState(1);
+  const [hasMoreInventory, setHasMoreInventory] = useState(true);
   const [inventories, setInventories] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
-  const [totalInventories, setTotalInventories] = useState(0);
-  const [openInventory, setOpenInventory] = useState<number | null>(null);
-  const [inventorySearchQueries, setInventorySearchQueries] = useState<
-    string[]
-  >([]);
   const [subCategoryCursor, setSubCategoryCursor] = useState("");
   const [subCategories, setSubCategories] = useState<any[]>([]);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   const {
     data: categoryData,
@@ -113,27 +94,30 @@ export function MenuItemForm({
     isError: isSubCategoriesError,
   } = useSubCategories(50, subCategoryCursor);
 
-
   const handleLoadMoreSubCategories = () => {
     if (subCategoryData?.meta?.hasNextPage) {
       setSubCategoryCursor(subCategoryData.meta.nextCursor);
     }
   };
 
-  const debouncedSearchQuery = useDebounce(
-    inventorySearchQueries[openInventory ?? 0] || "",
-    300
-  );
+  const debouncedInventorySearch = useDebounce(inventorySearch, 300);
 
   const {
     data: inventoryData,
     isLoading: isInventoriesLoading,
     isError: isInventoriesError,
   } = useGetInventories({
-    page: inventoryPage,
-    limit: "10",
-    search: debouncedSearchQuery || undefined,
+    page: inventoryPage.toString(),
+    limit: "50",
+    search: debouncedInventorySearch || undefined,
   });
+
+  // Reset inventory page when search changes
+  useEffect(() => {
+    setInventoryPage(1);
+    setInventories([]);
+    setHasMoreInventory(true);
+  }, [debouncedInventorySearch]);
 
   // Fetch specific inventory items for initialData.recipes
   const initialInventoryIds =
@@ -170,15 +154,25 @@ export function MenuItemForm({
 
   useEffect(() => {
     if (inventoryData?.data) {
-      setInventories((prev) => {
-        const newItems = inventoryData.data.filter(
-          (item) => !prev.some((i) => i.id === item.id)
-        );
-        return [...prev, ...newItems];
-      });
-      setTotalInventories(inventoryData.total);
+      if (inventoryPage === 1) {
+        // First page - replace all items
+        setInventories(inventoryData.data);
+      } else {
+        // Subsequent pages - append items
+        setInventories((prev) => {
+          const newItems = inventoryData.data.filter(
+            (item) => !prev.some((i) => i.id === item.id)
+          );
+          return [...prev, ...newItems];
+        });
+      }
+      
+      // Check if there are more items to load
+      const total = inventoryData.total || 0;
+      const loaded = inventoryPage * 50;
+      setHasMoreInventory(loaded < total);
     }
-  }, [inventoryData]);
+  }, [inventoryData, inventoryPage]);
 
   useEffect(() => {
     if (initialInventoryData?.data) {
@@ -231,13 +225,22 @@ export function MenuItemForm({
 
   useEffect(() => {
     form.reset(normalizedInitialData);
-  }, [initialData, form]);
+    // Set initial image preview if editing
+    if (initialData?.imageUrl) {
+      setImagePreview(initialData.imageUrl);
+    } else {
+      setImagePreview(null);
+    }
+  }, [initialData]);
 
+  // Clean up object URL when component unmounts
   useEffect(() => {
-    setInventorySearchQueries(fields.map(() => ""));
-  }, [fields.length]);
-
-  useEffect(() => {}, [watchedRecipes, inventories]);
+    return () => {
+      if (imagePreview && imagePreview.startsWith('blob:')) {
+        URL.revokeObjectURL(imagePreview);
+      }
+    };
+  }, [imagePreview]);
 
   const handleSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsLoading(true);
@@ -283,24 +286,10 @@ export function MenuItemForm({
     }
   };
 
-  const handleLoadMoreInventories = () => {
-    const currentPage = parseInt(inventoryPage, 10);
-    setInventoryPage((currentPage + 1).toString());
-  };
-
-  const hasNextInventoryPage = () => {
-    const currentPage = parseInt(inventoryPage, 10);
-    const itemsLoaded = currentPage * 10;
-    return itemsLoaded < totalInventories;
-  };
-
-  const handleSearchChange = (index: number, value: string) => {
-    setInventorySearchQueries((prev) => {
-      const newQueries = [...prev];
-      newQueries[index] = value;
-      return newQueries;
-    });
-    setInventoryPage("1");
+  const handleLoadMoreInventory = () => {
+    if (hasMoreInventory && !isInventoriesLoading) {
+      setInventoryPage((prev) => prev + 1);
+    }
   };
 
   return (
@@ -401,104 +390,65 @@ export function MenuItemForm({
                 >
                   <FormItem className="flex-1">
                     <FormLabel>Inventory</FormLabel>
-                    <Popover
-                      open={openInventory === index}
-                      onOpenChange={(open) => {
-                        setOpenInventory(open ? index : null);
-                        if (!open) {
-                          handleSearchChange(index, "");
+                    <div className="relative">
+                      <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400 z-10" />
+                      <Input
+                        type="text"
+                        placeholder="Search inventory..."
+                        value={inventorySearch}
+                        onChange={(e) => setInventorySearch(e.target.value)}
+                        className="pl-10 mb-2 h-10"
+                      />
+                    </div>
+                    <CustomSelect
+                      value={watchedRecipes?.[index]?.inventoryId || ""}
+                      onValueChange={(value) => {
+                        const selectedItem = inventories.find(
+                          (item) => item.id === value
+                        );
+                        if (selectedItem) {
+                          form.setValue(
+                            `recipes.${index}.inventoryId` as const,
+                            selectedItem.id
+                          );
+                          form.setValue(
+                            `recipes.${index}.inventoryName` as const,
+                            selectedItem.itemName
+                          );
+                          form.setValue(
+                            `recipes.${index}.quantity` as const,
+                            watchedRecipes?.[index]?.quantity || "1"
+                          );
+                          form.setValue(
+                            `recipes.${index}.unit` as const,
+                            selectedItem.unit || "kg"
+                          );
                         }
                       }}
+                      placeholder="Select inventory item"
+                      onScrollToBottom={handleLoadMoreInventory}
+                      isLoadingMore={isInventoriesLoading && inventoryPage > 1}
                     >
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant="outline"
-                            role="combobox"
-                            className={cn(
-                              "w-full justify-between text-sm h-10",
-                              !watchedRecipes[index]?.inventoryName &&
-                                "text-muted-foreground"
-                            )}
-                          >
-                            {watchedRecipes[index]?.inventoryName ||
-                              "Select inventory item"}
-                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-[calc(100vw-2rem)] sm:w-full p-0">
-                        <Command>
-                          <CommandInput
-                            placeholder="Search inventory..."
-                            value={inventorySearchQueries[index] || ""}
-                            onValueChange={(value) =>
-                              handleSearchChange(index, value)
-                            }
-                          />
-                          <CommandList>
-                            <CommandEmpty>No inventory found.</CommandEmpty>
-                            <CommandGroup>
-                              {isInventoriesLoading ? (
-                                <CommandItem disabled>
-                                  Loading inventories...
-                                </CommandItem>
-                              ) : isInventoriesError ? (
-                                <CommandItem disabled>
-                                  Error loading inventories
-                                </CommandItem>
-                              ) : (
-                                inventories.map((item) => (
-                                  <CommandItem
-                                    key={`${item.id}-${index}`}
-                                    value={item.itemName}
-                                    onSelect={() => {
-                                      form.setValue(
-                                        `recipes.${index}.inventoryId` as const,
-                                        item.id
-                                      );
-                                      form.setValue(
-                                        `recipes.${index}.inventoryName` as const,
-                                        item.itemName
-                                      );
-                                      form.setValue(
-                                        `recipes.${index}.quantity` as const,
-                                        "1"
-                                      );
-                                      form.setValue(
-                                        `recipes.${index}.unit` as const,
-                                        item.unit || "kg"
-                                      );
-                                      form.trigger(`recipes.${index}`);
-                                      setOpenInventory(null);
-                                      handleSearchChange(index, "");
-                                    }}
-                                  >
-                                    <Check
-                                      className={cn(
-                                        "mr-2 h-4 w-4",
-                                        field.inventoryId === item.id
-                                          ? "opacity-100"
-                                          : "opacity-0"
-                                      )}
-                                    />
-                                    {item.itemName} ({item.unit})
-                                  </CommandItem>
-                                ))
-                              )}
-                              {hasNextInventoryPage() && (
-                                <CommandItem
-                                  onSelect={handleLoadMoreInventories}
-                                  className="justify-center"
-                                >
-                                  Load More
-                                </CommandItem>
-                              )}
-                            </CommandGroup>
-                          </CommandList>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
+                      {isInventoriesLoading && inventoryPage === 1 ? (
+                        <CustomSelectItem disabled value="loading">
+                          Loading inventories...
+                        </CustomSelectItem>
+                      ) : isInventoriesError ? (
+                        <CustomSelectItem disabled value="error">
+                          Error loading inventories
+                        </CustomSelectItem>
+                      ) : inventories.length === 0 ? (
+                        <CustomSelectItem disabled value="empty">
+                          No inventory items found
+                        </CustomSelectItem>
+                      ) : (
+                        inventories.map((item) => (
+                          <CustomSelectItem key={item.id} value={item.id}>
+                            {item.itemName} ({item.unit})
+                          </CustomSelectItem>
+                        ))
+                      )}
+                    </CustomSelect>
                     <FormMessage />
                   </FormItem>
 
@@ -527,9 +477,9 @@ export function MenuItemForm({
                           value={
                             inventories.find(
                               (inv) =>
-                                inv.id === watchedRecipes[index]?.inventoryId
+                                inv.id === watchedRecipes?.[index]?.inventoryId
                             )?.unit ||
-                            watchedRecipes[index]?.unit ||
+                            watchedRecipes?.[index]?.unit ||
                             ""
                           }
                           className="h-10"
@@ -542,12 +492,7 @@ export function MenuItemForm({
                       variant="destructive"
                       size="sm"
                       className="h-10 w-10 sm:w-auto sm:px-3 sm:mt-8 mt-2"
-                      onClick={() => {
-                        remove(index);
-                        setInventorySearchQueries((prev) =>
-                          prev.filter((_, i) => i !== index)
-                        );
-                      }}
+                      onClick={() => remove(index)}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -581,48 +526,43 @@ export function MenuItemForm({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Category</FormLabel>
-                <Select
+                <CustomSelect
+                  value={field.value}
                   onValueChange={field.onChange}
-                  defaultValue={field.value}
+                  placeholder="Select a category"
                 >
-                  <FormControl>
-                    <SelectTrigger className="h-10">
-                      <SelectValue placeholder="Select a category" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {isCategoriesLoading ? (
-                      <SelectItem disabled value="loading">
-                        Loading categories...
-                      </SelectItem>
-                    ) : isCategoriesError ? (
-                      <SelectItem disabled value="error">
-                        Error loading categories
-                      </SelectItem>
-                    ) : (
-                      <>
-                        {categories.map((category) => (
-                          <SelectItem key={category.id} value={category.id}>
-                            {category.name}
-                          </SelectItem>
-                        ))}
-                        {categoryData?.meta?.hasNextPage && (
-                          <div className="flex justify-center mt-2">
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={handleLoadMoreCategories}
-                            >
-                              Load More
-                              <ChevronDown className="ml-2 h-4 w-4" />
-                            </Button>
-                          </div>
-                        )}
-                      </>
-                    )}
-                  </SelectContent>
-                </Select>
+                  {isCategoriesLoading ? (
+                    <CustomSelectItem disabled value="loading">
+                      Loading categories...
+                    </CustomSelectItem>
+                  ) : isCategoriesError ? (
+                    <CustomSelectItem disabled value="error">
+                      Error loading categories
+                    </CustomSelectItem>
+                  ) : (
+                    <>
+                      {categories.map((category) => (
+                        <CustomSelectItem key={category.id} value={category.id}>
+                          {category.name}
+                        </CustomSelectItem>
+                      ))}
+                      {categoryData?.meta?.hasNextPage && (
+                        <div className="px-2 py-2 border-t mt-1">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="w-full"
+                            onClick={handleLoadMoreCategories}
+                          >
+                            Load More
+                            <ChevronDown className="ml-2 h-4 w-4" />
+                          </Button>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </CustomSelect>
                 <FormMessage />
               </FormItem>
             )}
@@ -634,48 +574,43 @@ export function MenuItemForm({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Subcategory</FormLabel>
-                <Select
+                <CustomSelect
+                  value={field.value}
                   onValueChange={field.onChange}
-                  defaultValue={field.value}
+                  placeholder="Select a subcategory"
                 >
-                  <FormControl>
-                    <SelectTrigger className="h-10">
-                      <SelectValue placeholder="Select a subcategory" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {isSubCategoriesLoading ? (
-                      <SelectItem disabled value="loading">
-                        Loading subcategories...
-                      </SelectItem>
-                    ) : isSubCategoriesError ? (
-                      <SelectItem disabled value="error">
-                        Error loading subcategories
-                      </SelectItem>
-                    ) : (
-                      <>
-                        {subCategories.map((sub) => (
-                          <SelectItem key={sub.id} value={sub.id}>
-                            {sub.name}
-                          </SelectItem>
-                        ))}
-                        {subCategoryData?.meta?.hasNextPage && (
-                          <div className="flex justify-center mt-2">
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={handleLoadMoreSubCategories}
-                            >
-                              Load More
-                              <ChevronDown className="ml-2 h-4 w-4" />
-                            </Button>
-                          </div>
-                        )}
-                      </>
-                    )}
-                  </SelectContent>
-                </Select>
+                  {isSubCategoriesLoading ? (
+                    <CustomSelectItem disabled value="loading">
+                      Loading subcategories...
+                    </CustomSelectItem>
+                  ) : isSubCategoriesError ? (
+                    <CustomSelectItem disabled value="error">
+                      Error loading subcategories
+                    </CustomSelectItem>
+                  ) : (
+                    <>
+                      {subCategories.map((sub) => (
+                        <CustomSelectItem key={sub.id} value={sub.id}>
+                          {sub.name}
+                        </CustomSelectItem>
+                      ))}
+                      {subCategoryData?.meta?.hasNextPage && (
+                        <div className="px-2 py-2 border-t mt-1">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="w-full"
+                            onClick={handleLoadMoreSubCategories}
+                          >
+                            Load More
+                            <ChevronDown className="ml-2 h-4 w-4" />
+                          </Button>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </CustomSelect>
                 <FormMessage />
               </FormItem>
             )}
@@ -690,6 +625,35 @@ export function MenuItemForm({
                 <FormLabel>
                   Image {initialData ? "(Leave blank to keep current)" : ""}
                 </FormLabel>
+                
+                {/* Image Preview */}
+                {imagePreview && (
+                  <div className="mb-4">
+                    <div className="relative w-full max-w-xs h-48 rounded-lg overflow-hidden border border-border">
+                      <img
+                        src={imagePreview}
+                        alt="Preview"
+                        className="w-full h-full object-cover"
+                      />
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="icon"
+                        className="absolute top-2 right-2 h-8 w-8"
+                        onClick={() => {
+                          setImagePreview(null);
+                          field.onChange(null);
+                          // Reset the file input
+                          const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+                          if (fileInput) fileInput.value = '';
+                        }}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
                 <FormControl>
                   <Input
                     type="file"
@@ -697,7 +661,16 @@ export function MenuItemForm({
                     className="h-10"
                     onChange={(e) => {
                       const file = e.target.files?.[0];
-                      field.onChange(file);
+                      if (file) {
+                        // Clean up old preview URL if it exists
+                        if (imagePreview && imagePreview.startsWith('blob:')) {
+                          URL.revokeObjectURL(imagePreview);
+                        }
+                        // Create new preview URL
+                        const previewUrl = URL.createObjectURL(file);
+                        setImagePreview(previewUrl);
+                        field.onChange(file);
+                      }
                     }}
                   />
                 </FormControl>
