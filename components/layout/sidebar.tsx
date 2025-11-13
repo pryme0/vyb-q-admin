@@ -90,7 +90,7 @@ export function Sidebar({ isMobileOpen, toggleMobile }: SidebarProps) {
             <div className="flex items-center justify-center">
               <Image
                 src="/logo.JPG"
-                alt="Royal Bistro Logo"
+                alt="Vybe-Q Logo"
                 width={32}
                 height={32}
                 className="object-contain rounded-sm"
@@ -101,14 +101,14 @@ export function Sidebar({ isMobileOpen, toggleMobile }: SidebarProps) {
             <div className="flex items-center gap-3">
               <Image
                 src="/logo.JPG"
-                alt="Royal Bistro Logo"
+                alt="Vybe-Q Logo"
                 width={40}
                 height={40}
                 className="object-contain rounded-sm flex-shrink-0"
                 priority
               />
               <h1 className="text-xl font-bold whitespace-nowrap overflow-hidden text-ellipsis">
-                Royal Bistro
+                Vybe-Q
               </h1>
             </div>
           )}
