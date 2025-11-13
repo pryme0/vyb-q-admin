@@ -30,6 +30,7 @@ import {
   CommandGroup,
   CommandInput,
   CommandItem,
+  CommandList,
 } from "@/components/ui/command";
 import {
   Popover,
@@ -435,64 +436,66 @@ export function MenuItemForm({
                               handleSearchChange(index, value)
                             }
                           />
-                          <CommandEmpty>No inventory found.</CommandEmpty>
-                          <CommandGroup className="max-h-[200px] overflow-y-auto">
-                            {isInventoriesLoading ? (
-                              <CommandItem disabled>
-                                Loading inventories...
-                              </CommandItem>
-                            ) : isInventoriesError ? (
-                              <CommandItem disabled>
-                                Error loading inventories
-                              </CommandItem>
-                            ) : (
-                              inventories.map((item) => (
-                                <CommandItem
-                                  key={`${item.id}-${index}`}
-                                  value={item.itemName}
-                                  onSelect={() => {
-                                    form.setValue(
-                                      `recipes.${index}.inventoryId` as const,
-                                      item.id
-                                    );
-                                    form.setValue(
-                                      `recipes.${index}.inventoryName` as const,
-                                      item.itemName
-                                    );
-                                    form.setValue(
-                                      `recipes.${index}.quantity` as const,
-                                      "1"
-                                    );
-                                    form.setValue(
-                                      `recipes.${index}.unit` as const,
-                                      item.unit || "kg"
-                                    );
-                                    form.trigger(`recipes.${index}`);
-                                    setOpenInventory(null);
-                                    handleSearchChange(index, "");
-                                  }}
-                                >
-                                  <Check
-                                    className={cn(
-                                      "mr-2 h-4 w-4",
-                                      field.inventoryId === item.id
-                                        ? "opacity-100"
-                                        : "opacity-0"
-                                    )}
-                                  />
-                                  {item.itemName} ({item.unit})
+                          <CommandList>
+                            <CommandEmpty>No inventory found.</CommandEmpty>
+                            <CommandGroup>
+                              {isInventoriesLoading ? (
+                                <CommandItem disabled>
+                                  Loading inventories...
                                 </CommandItem>
-                              ))
-                            )}
-                            {hasNextInventoryPage() && (
-                              <CommandItem
-                                onSelect={handleLoadMoreInventories}
-                                className="justify-center"
-                              >
-                                Load More
-                              </CommandItem>
-                            )}
-                          </CommandGroup>
+                              ) : isInventoriesError ? (
+                                <CommandItem disabled>
+                                  Error loading inventories
+                                </CommandItem>
+                              ) : (
+                                inventories.map((item) => (
+                                  <CommandItem
+                                    key={`${item.id}-${index}`}
+                                    value={item.itemName}
+                                    onSelect={() => {
+                                      form.setValue(
+                                        `recipes.${index}.inventoryId` as const,
+                                        item.id
+                                      );
+                                      form.setValue(
+                                        `recipes.${index}.inventoryName` as const,
+                                        item.itemName
+                                      );
+                                      form.setValue(
+                                        `recipes.${index}.quantity` as const,
+                                        "1"
+                                      );
+                                      form.setValue(
+                                        `recipes.${index}.unit` as const,
+                                        item.unit || "kg"
+                                      );
+                                      form.trigger(`recipes.${index}`);
+                                      setOpenInventory(null);
+                                      handleSearchChange(index, "");
+                                    }}
+                                  >
+                                    <Check
+                                      className={cn(
+                                        "mr-2 h-4 w-4",
+                                        field.inventoryId === item.id
+                                          ? "opacity-100"
+                                          : "opacity-0"
+                                      )}
+                                    />
+                                    {item.itemName} ({item.unit})
+                                  </CommandItem>
+                                ))
+                              )}
+                              {hasNextInventoryPage() && (
+                                <CommandItem
+                                  onSelect={handleLoadMoreInventories}
+                                  className="justify-center"
+                                >
+                                  Load More
+                                </CommandItem>
+                              )}
+                            </CommandGroup>
+                          </CommandList>
                         </Command>
                       </PopoverContent>
                     </Popover>
