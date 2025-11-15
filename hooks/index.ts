@@ -10,3 +10,5 @@ export * from "./use-order";
 export * from "./useAnalytics";
 export * from "./use-events";
 export * from "./use-discounts";
+export * from "./use-waitress";
+export * from "./use-waitress-orders";

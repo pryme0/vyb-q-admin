@@ -20,6 +20,8 @@ import {
   ShoppingCart,
   Calendar,
   Tag,
+  UserCheck,
+  ClipboardList,
 } from "lucide-react";
 import { useAuthStore } from "@/store";
 
@@ -32,6 +34,8 @@ const sidebarNavItems = [
   { title: "Inventory", href: "/dashboard/inventory", icon: Package },
   { title: "Reservations", href: "/dashboard/reservations", icon: Clock },
   { title: "Events", href: "/dashboard/events", icon: Calendar },
+  { title: "Waitresses", href: "/dashboard/waitresses", icon: UserCheck },
+  { title: "Waitress Orders", href: "/dashboard/waitress-orders", icon: ClipboardList },
   { title: "Reports", href: "/dashboard/reports", icon: FileText },
   { title: "Settings", href: "/dashboard/settings", icon: Settings },
 ];
