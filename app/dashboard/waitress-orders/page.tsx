@@ -10,6 +10,7 @@ import {
   CheckCircle,
   Trash2,
   Filter,
+  Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,6 +29,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -38,11 +46,13 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
 import {
   useWaitressOrders,
   useWaitresses,
   useToggleOrderStatus,
   useDeleteWaitressOrder,
+  useGenerateOrderReport,
   useDebounce,
 } from "@/hooks";
 import { toast } from "sonner";
@@ -55,6 +65,10 @@ export default function WaitressOrdersPage() {
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [waitressFilter, setWaitressFilter] = useState<string>("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
+  const [reportStartDate, setReportStartDate] = useState("");
+  const [reportEndDate, setReportEndDate] = useState("");
+  const [reportEmail, setReportEmail] = useState("");
 
   const debouncedSearch = useDebounce(search, 300);
 
@@ -70,6 +84,7 @@ export default function WaitressOrdersPage() {
   const { closeOrder, reopenOrder, isPending: isTogglingStatus } =
     useToggleOrderStatus();
   const deleteMutation = useDeleteWaitressOrder();
+  const generateReportMutation = useGenerateOrderReport();
 
   const orders = ordersData?.data || [];
   const total = ordersData?.total || 0;
@@ -106,6 +121,37 @@ export default function WaitressOrdersPage() {
     }
   };
 
+  const handleGenerateReport = async () => {
+    if (!reportStartDate || !reportEndDate) {
+      toast.error("Please select start and end dates");
+      return;
+    }
+
+    if (new Date(reportEndDate) < new Date(reportStartDate)) {
+      toast.error("End date must be after or equal to start date");
+      return;
+    }
+
+    try {
+      const result = await generateReportMutation.mutateAsync({
+        startDate: reportStartDate,
+        endDate: reportEndDate,
+        email: reportEmail || undefined,
+      });
+      
+      toast.success(
+        result.message || `Report sent successfully to ${reportEmail || "efeduku@gmail.com"}`
+      );
+      
+      setIsReportDialogOpen(false);
+      setReportStartDate("");
+      setReportEndDate("");
+      setReportEmail("");
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Failed to generate report");
+    }
+  };
+
   const clearFilters = () => {
     setSearch("");
     setStatusFilter("");
@@ -120,14 +166,20 @@ export default function WaitressOrdersPage() {
   return (
     <div className="container mx-auto p-6 space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold flex items-center gap-2">
-          <ClipboardList className="h-8 w-8" />
-          Waitress Orders
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          View and manage orders created by waitresses
-        </p>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold flex items-center gap-2">
+            <ClipboardList className="h-8 w-8" />
+            Waitress Orders
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            View and manage orders created by waitresses
+          </p>
+        </div>
+        <Button onClick={() => setIsReportDialogOpen(true)}>
+          <Download className="mr-2 h-4 w-4" />
+          Generate Report
+        </Button>
       </div>
 
       {/* Stats Cards */}
@@ -421,6 +473,83 @@ export default function WaitressOrdersPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Generate Report Dialog */}
+      <Dialog open={isReportDialogOpen} onOpenChange={setIsReportDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Generate Waitress Order Report</DialogTitle>
+            <DialogDescription>
+              Generate a CSV report for a specific date range. The report will be
+              sent to the specified email address.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="startDate">Start Date</Label>
+              <Input
+                id="startDate"
+                type="date"
+                value={reportStartDate}
+                onChange={(e) => setReportStartDate(e.target.value)}
+                max={reportEndDate || undefined}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="endDate">End Date</Label>
+              <Input
+                id="endDate"
+                type="date"
+                value={reportEndDate}
+                onChange={(e) => setReportEndDate(e.target.value)}
+                min={reportStartDate || undefined}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">
+                Email Address{" "}
+                <span className="text-xs text-muted-foreground">(Optional)</span>
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="efeduku@gmail.com (default)"
+                value={reportEmail}
+                onChange={(e) => setReportEmail(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                If not provided, the report will be sent to efeduku@gmail.com
+              </p>
+            </div>
+          </div>
+          <div className="flex justify-end gap-3">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsReportDialogOpen(false);
+                setReportStartDate("");
+                setReportEndDate("");
+                setReportEmail("");
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleGenerateReport}
+              disabled={generateReportMutation.isPending}
+            >
+              {generateReportMutation.isPending ? (
+                <>Generating...</>
+              ) : (
+                <>
+                  <Download className="mr-2 h-4 w-4" />
+                  Generate Report
+                </>
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

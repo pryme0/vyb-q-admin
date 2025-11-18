@@ -7,7 +7,7 @@ import type {
   WaitressResponse,
 } from "@/types";
 
-// Get all waitresses
+// Get all waitresses (Admin)
 export function useWaitresses(
   page: number = 1,
   limit: number = 10,
@@ -19,18 +19,18 @@ export function useWaitresses(
       const params: any = { page, limit };
       if (search) params.search = search;
       
-      const response = await axiosBase.get("/waitress", { params });
+      const response = await axiosBase.get("/waitress/admin/waitresses", { params });
       return response.data;
     },
   });
 }
 
-// Get single waitress by ID
+// Get single waitress by ID (Admin)
 export function useWaitress(id: string) {
   return useQuery<Waitress>({
     queryKey: ["waitress", id],
     queryFn: async () => {
-      const response = await axiosBase.get(`/waitress/${id}`);
+      const response = await axiosBase.get(`/waitress/admin/waitresses/${id}`);
       return response.data;
     },
     enabled: !!id,
@@ -52,13 +52,13 @@ export function useCreateWaitress() {
   });
 }
 
-// Update waitress
+// Update waitress (Admin)
 export function useUpdateWaitress() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: UpdateWaitressDto }) => {
-      const response = await axiosBase.patch(`/waitress/${id}`, data);
+      const response = await axiosBase.patch(`/waitress/admin/waitresses/${id}`, data);
       return response.data;
     },
     onSuccess: (_, variables) => {
@@ -68,13 +68,13 @@ export function useUpdateWaitress() {
   });
 }
 
-// Delete waitress
+// Delete waitress (Admin)
 export function useDeleteWaitress() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const response = await axiosBase.delete(`/waitress/${id}`);
+      const response = await axiosBase.delete(`/waitress/admin/waitresses/${id}`);
       return response.data;
     },
     onSuccess: () => {

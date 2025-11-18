@@ -106,3 +106,17 @@ export function useToggleOrderStatus() {
   };
 }
 
+// Generate waitress order report (Admin)
+export function useGenerateOrderReport() {
+  return useMutation({
+    mutationFn: async (data: {
+      startDate: string;
+      endDate: string;
+      email?: string;
+    }) => {
+      const response = await axiosBase.post("/waitress-orders/admin/generate-report", data);
+      return response.data;
+    },
+  });
+}
+
